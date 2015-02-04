@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ActivityInfoX;
 import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ApplicationInfoX;
 import org.bbs.apkparser.ApkManifestParser.PackageInfoX.IntentInfoX;
+import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ServiceInfoX;
 import org.bbs.apkparser.ApkManifestParser.PackageInfoX.UsesSdkX;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -17,8 +19,10 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ComponentInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageItemInfo;
+import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
@@ -29,6 +33,10 @@ import android.util.Log;
 
 @SuppressLint("NewApi")
 public class ApkManifestParser {
+	private static final String TAG = ApkManifestParser.class.getSimpleName();
+
+	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
+	private static final String TAG_SERVICE = "service";
 	private static final String ATTR_BACKUP_AGENT = "backupAgent";
 	private static final String ATTR_ALLOW_TASK_REPARENTING = "allowTaskReparenting";
 	private static final String ATTR_DEBUGGABLE = "debuggable";
@@ -36,7 +44,6 @@ public class ApkManifestParser {
 	private static final String TAG_META_DATA = "meta-data";
 	private static final String ATTR_BANNER = "banner";
 	private static final String ATTR_LOGO = "logo";
-	private static final String TAG = ApkManifestParser.class.getSimpleName();
 	private static final String TAG_USES_SDK = "uses-sdk";
 	private static final String ATTR_RESOURCE = "resource";
 	private static final String ATTR_VALUE = "value";
@@ -48,12 +55,13 @@ public class ApkManifestParser {
 	private static final String TAG_ACTION = "action";
 	private static final String TAG_ACTIVITY = "activity";
 	private static final String ATTR_VERSION_NAME = "versionName";
-	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
 	private static final String ATTR_VERSION_CODE = "versionCode";
 	private static final String TAG_APPLICATION = "application";
 	private static final String ATTR_NAME = "name";
 	private static final String ATTR_PACKAGE = "package";
 	private static final String TAG_MANIFEST = "manifest";
+	
+	private static final boolean LOG_UN_HANDLED_ITEM = false;
 
 	public static PackageInfoX parseAPk(Context context, String apkFile) {
 		PackageInfoX info = new PackageInfoX();
@@ -72,9 +80,9 @@ public class ApkManifestParser {
 			info.applicationInfo.sourceDir = apkFile;
 			resolveParsedApk(info);
 			
-			parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
-			dumpParser(parser);
-//			info.dump();
+//			parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
+//			dumpParser(parser);
+			info.dump();
 
 			return info;
 		} catch (InstantiationException e) {
@@ -133,23 +141,35 @@ public class ApkManifestParser {
 		
 		if (info.activities != null && info.activities.length > 0) {
 			for (ActivityInfo a : info.activities) {
-				ActivityInfoX aX = (ActivityInfoX) a;
-				if (aX.theme == 0 && appInfo.theme > 0) {
-					aX.theme = appInfo.theme;
+				ActivityInfoX comX = (ActivityInfoX) a;
+				comX.mPackageInfo = info;
+				if (comX.theme == 0 && appInfo.theme > 0) {
+					comX.theme = appInfo.theme;
 				}
 
-				aX.labelRes = aX.labelRes != 0 ? aX.labelRes : appInfo.labelRes;
-				aX.nonLocalizedLabel = !TextUtils.isEmpty(aX.nonLocalizedLabel) ? aX.nonLocalizedLabel : appInfo.nonLocalizedLabel;
-				aX.packageName = appInfo.packageName;
-				aX.mPackageInfo = info;
-				
-				if (!TextUtils.isEmpty(aX.name) && 
-						(aX.name.startsWith(".") || !aX.name.contains("."))) {
-					String D = !aX.name.contains(".") ? "." : "";
-					aX.name = appInfo.packageName + D + aX.name;
-				}
+				resolveComponentInfo((ApplicationInfoX) appInfo, comX);
 			}
-			
+		}		
+		
+		if (info.services != null && info.services.length > 0) {
+			for (ServiceInfo a : info.services) {
+				ServiceInfoX comX = (ServiceInfoX) a;
+				comX.mPackageInfo = info;
+
+				resolveComponentInfo((ApplicationInfoX) appInfo, comX);
+			}
+		}
+	}
+	
+	private static void resolveComponentInfo(ApplicationInfoX appInfo, ComponentInfo cInfo) {
+		cInfo.labelRes = cInfo.labelRes != 0 ? cInfo.labelRes : appInfo.labelRes;
+		cInfo.nonLocalizedLabel = !TextUtils.isEmpty(cInfo.nonLocalizedLabel) ? cInfo.nonLocalizedLabel : appInfo.nonLocalizedLabel;
+		cInfo.packageName = appInfo.packageName;
+		
+		if (!TextUtils.isEmpty(cInfo.name) && 
+				(cInfo.name.startsWith(".") || !cInfo.name.contains("."))) {
+			String D = !cInfo.name.contains(".") ? "." : "";
+			cInfo.name = appInfo.packageName + D + cInfo.name;
 		}
 	}
 
@@ -205,7 +225,9 @@ public class ApkManifestParser {
 //			} else if ("installLocation".equals(attName)) {
 //				info.installLocation = toResId(attValue);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 		
@@ -220,11 +242,13 @@ public class ApkManifestParser {
 
 			String tagName = parser.getName();
 			if (TAG_APPLICATION.equals(tagName)) {
-				parserApplication(parser, info);
+				parseApplication(parser, info);
 			} else if (TAG_USES_SDK.equals(tagName)) {
-				parserUsesSdk(parser, info);
+				parseUsesSdk(parser, info);
 			} else {
-				Log.w(TAG, "un-handled tag: " + tagName);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
 			}
 		}
 
@@ -246,7 +270,7 @@ public class ApkManifestParser {
 		return false;
 	}
 
-	private static void parserUsesSdk(XmlResourceParser parser,
+	private static void parseUsesSdk(XmlResourceParser parser,
 			PackageInfoX info) {// parse attr
 		UsesSdkX sdk = new UsesSdkX();
 		final int attCount = parser.getAttributeCount();
@@ -260,14 +284,16 @@ public class ApkManifestParser {
 			} else if ("targetSdkVersion".equals(attName)) {
 				sdk.mTargetSdkVersion = Integer.parseInt(attValue);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 		
 		info.mUsesSdk = sdk;
 	}
 
-	private static void parserApplication(XmlResourceParser parser,
+	private static void parseApplication(XmlResourceParser parser,
 			PackageInfoX info) throws XmlPullParserException, IOException {
 		info.applicationInfo = new ApplicationInfoX();
 		ApplicationInfoX app = (ApplicationInfoX) info.applicationInfo;
@@ -287,7 +313,9 @@ public class ApkManifestParser {
 			} else if (ATTR_PROCESS.equals(attName)) {
 				app.processName = (attValue);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 		parsePackageItem(parser, app);
@@ -304,7 +332,7 @@ public class ApkManifestParser {
 			String tagName = parser.getName();
 
 			if (TAG_ACTIVITY.equals(tagName)) {
-				parserActivity(parser, info);
+				parseActivity(parser, info);
 			} else if (TAG_META_DATA.equals(tagName)) {
 				if (info.applicationInfo == null){
 					info.applicationInfo = new ApplicationInfoX();
@@ -312,14 +340,41 @@ public class ApkManifestParser {
 				if (info.applicationInfo.metaData == null) {
 					info.applicationInfo.metaData = new Bundle();
 				}
-				parserMetaData(parser, info.applicationInfo.metaData);
-			} else {
-				Log.w(TAG, "un-handled tag: " + tagName);
+				parseMetaData(parser, info.applicationInfo.metaData);
+			} if (TAG_SERVICE.equals(tagName)) {
+				parseService(parser, info);
+			}  else {
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
 			}
 		}
 
 	}
 	
+	/**
+	 * <href a="http://developer.android.com/reference/android/content/pm/ComponentInfo.html">aaa</href>
+	 */
+	private static void parseComponentItem(XmlResourceParser parser, ComponentInfo info) {
+		final int attCount = parser.getAttributeCount();
+		for (int i = 0; i < attCount; i++) {
+			String attName = parser.getAttributeName(i);
+			String attValue = parser.getAttributeValue(i);
+			if ("process".equals(attName)) {
+				String cName = attValue;
+				info.processName = cName;
+			} else if ("exported".equals(attName)) {
+				info.exported = Boolean.parseBoolean(attName);
+			} else if ("enabled".equals(attName)) {
+				info.enabled = Boolean.parseBoolean(attName);
+			} else if ("description".equals(attName)) {
+				info.descriptionRes = toResId(attValue);
+			}  
+		}
+		
+		parsePackageItem(parser, info);
+	}
+
 	private static void parsePackageItem(XmlResourceParser parser, PackageItemInfo info) {
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
@@ -341,12 +396,14 @@ public class ApkManifestParser {
 			} else if (ATTR_BANNER.equals(attName)) {
 					info.logo = toResId(attValue);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			} 
 		}
 	}
 
-	private static void parserMetaData(XmlResourceParser parser, Bundle metaData) {
+	private static void parseMetaData(XmlResourceParser parser, Bundle metaData) {
 		String key = null;
 		String value = null;
 		final int attCount = parser.getAttributeCount();
@@ -362,17 +419,19 @@ public class ApkManifestParser {
 					value = attValue;
 				}
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 		
 		metaData.putString(key, value);		
 	}
 
-	private static void parserActivity(XmlResourceParser parser,
+	private static void parseActivity(XmlResourceParser parser,
 			PackageInfoX info) throws XmlPullParserException, IOException {
-		ActivityInfoX a = new ActivityInfoX();
-		a.applicationInfo = info.applicationInfo;
+		ActivityInfoX component = new ActivityInfoX();
+		component.applicationInfo = info.applicationInfo;
 		// parse attr
 		final int attCount = parser.getAttributeCount();
 		boolean hasLabel = false;
@@ -380,12 +439,14 @@ public class ApkManifestParser {
 			String attName = parser.getAttributeName(i);
 			String attValue = parser.getAttributeValue(i);
 			if (ATTR_THEME.equals(attName)) {
-				a.theme = Integer.parseInt(attValue.substring(1));
+				component.theme = Integer.parseInt(attValue.substring(1));
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
-		parsePackageItem(parser, a);		
+		parseComponentItem(parser, component);		
 		
 		// parse sub-element
 		int type;
@@ -399,14 +460,16 @@ public class ApkManifestParser {
 			String tagName = parser.getName();
 
 			if (TAG_INTENT_FILTER.equals(tagName)) {
-				parserIntentFilter(parser, info, a);
+				parseIntentFilter(parser, info, component);
 			} else if (TAG_META_DATA.equals(tagName)) {
-				if (a.metaData == null) {
-					a.metaData = new Bundle();
+				if (component.metaData == null) {
+					component.metaData = new Bundle();
 				}
-				parserMetaData(parser, a.metaData);
+				parseMetaData(parser, component.metaData);
 			} else {
-				Log.w(TAG, "un-handled tag: " + tagName);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
 			}
 			
 		}
@@ -414,21 +477,81 @@ public class ApkManifestParser {
 		if (info.activities == null) {
 			info.activities = new ActivityInfoX[1];
 
-			info.activities[0] = a;
+			info.activities[0] = component;
 		} else {
 			int len = info.activities.length;
-			ActivityInfoX[] as = new ActivityInfoX[len + 1];
-			System.arraycopy(info.activities, 0, as, 0, len);
-			as[len] = a;
+			ActivityInfoX[] components = new ActivityInfoX[len + 1];
+			System.arraycopy(info.activities, 0, components, 0, len);
+			components[len] = component;
 
-			info.activities = as;
+			info.activities = components;
+		}
+	}	
+	
+	private static void parseService(XmlResourceParser parser,
+			PackageInfoX info) throws XmlPullParserException, IOException {
+		ServiceInfoX component = new ServiceInfoX();
+		component.applicationInfo = info.applicationInfo;
+		// parse attr
+		final int attCount = parser.getAttributeCount();
+		boolean hasLabel = false;
+		for (int i = 0; i < attCount; i++) {
+			String attName = parser.getAttributeName(i);
+			String attValue = parser.getAttributeValue(i);
+			if (ATTR_THEME.equals(attName)) {
+			} else {
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
+			}
+		}
+		parseComponentItem(parser, component);		
+		
+		// parse sub-element
+		int type;
+		int outerDepth = parser.getDepth();
+		while ((type = parser.next()) != XmlPullParser.END_DOCUMENT
+				&& (type != XmlPullParser.END_TAG || parser.getDepth() > outerDepth)) {
+			if (type == XmlPullParser.END_TAG || type == XmlPullParser.TEXT) {
+				continue;
+			}
+
+			String tagName = parser.getName();
+
+//			if (TAG_INTENT_FILTER.equals(tagName)) {
+//				parserIntentFilter(parser, info, component);
+//			} else 
+				if (TAG_META_DATA.equals(tagName)) {
+				if (component.metaData == null) {
+					component.metaData = new Bundle();
+				}
+				parseMetaData(parser, component.metaData);
+			} else {
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
+			}
+			
+		}
+
+		if (info.services == null) {
+			info.services = new ServiceInfo[1];
+
+			info.services[0] = component;
+		} else {
+			int len = info.services.length;
+			ServiceInfo[] components = new ServiceInfo[len + 1];
+			System.arraycopy(info.services, 0, components, 0, len);
+			components[len] = component;
+
+			info.services = components;
 		}
 	}
 
-	private static void parserIntentFilter(XmlResourceParser parser,
+	private static void parseIntentFilter(XmlResourceParser parser,
 			PackageInfoX info, ActivityInfoX a) throws XmlPullParserException,
 			IOException {
-		IntentInfoX i = new IntentInfoX();
+		IntentInfoX intentInfo = new IntentInfoX();
 		// parse attr
 
 		// parse sub-element
@@ -443,23 +566,25 @@ public class ApkManifestParser {
 			String tagName = parser.getName();
 
 			if (TAG_ACTION.equals(tagName)) {
-				parserAction(parser, info, i);
+				parseAction(parser, info, intentInfo);
 			} else if (TAG_CATEGORY.equals(tagName)) {
-				parseCategory(parser, info, i);
+				parseCategory(parser, info, intentInfo);
 			} else {
-				Log.w(TAG, "un-handled tag: " + tagName);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
 			}
 		}
 
 		if (a.mIntents == null) {
 			a.mIntents = new IntentInfoX[1];
 
-			a.mIntents[0] = i;
+			a.mIntents[0] = intentInfo;
 		} else {
 			int len = a.mIntents.length;
 			IntentInfoX[] as = new IntentInfoX[len + 1];
 			System.arraycopy(a.mIntents, 0, as, 0, len);
-			as[len] = i;
+			as[len] = intentInfo;
 
 			a.mIntents = as;
 		}
@@ -477,12 +602,14 @@ public class ApkManifestParser {
 				String category = attValue;
 				intentInfo.addCategory(category);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 	}
 
-	private static void parserAction(XmlResourceParser parser,
+	private static void parseAction(XmlResourceParser parser,
 			PackageInfoX info, IntentInfoX intentInfo) {
 		// parse attr
 		final int attCount = parser.getAttributeCount();
@@ -493,7 +620,9 @@ public class ApkManifestParser {
 				String action = attValue;
 				intentInfo.addAction(action);
 			} else {
-				Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+				}
 			}
 		}
 	}
@@ -551,26 +680,21 @@ public class ApkManifestParser {
 	 */
 	public static class PackageInfoX extends PackageInfo {
 		public static final int DUMP_APPLICATION = 1 << 0;
-		public static final int DUMP_ACTIVITY = 1 << 1;
+		public static final int DUMP_ACTIVITY = 1 << 1 | DUMP_APPLICATION;
 		public static final int DUMP_USES_SDK = 1 << 2;
+		public static final int DUMP_META_DATA = 1 << 3 | DUMP_APPLICATION;
+		public static final int DUMP_SERVICE = 1 << 4 | DUMP_APPLICATION;
 		
 		public static final int DUMP_ALL = 0xFFFF;
+		public static final int FLAG_DUMP = DUMP_SERVICE;
 		
 		public UsesSdkX mUsesSdk;
 		
 		// evaluate by application.
 		public String mLibPath;
-
-		public static void dump(int level, Bundle metaData) {
-			if (metaData != null) {
-				Log.d(TAG, makePrefix(level) + "metaData: ");
-				level++;
-				Iterator<String> it = metaData.keySet().iterator();
-				while (it.hasNext()) {
-					String key = it.next();
-					Log.d(TAG, makePrefix(level) + key + ": " + metaData.getString(key));
-				}
-			}
+		
+		public static boolean hasFlag(int flag, int mask) {
+			return (flag & mask) == mask;
 		}
 
 		public static class ApplicationInfoX extends ApplicationInfo {
@@ -578,17 +702,22 @@ public class ApkManifestParser {
 			public boolean mDebuggable;
 			public boolean mAllowTaskReparenting;
 
-			public void dump(int level) {	
+			public void dump(int level, int flag) {	
 				Log.d(TAG, makePrefix(level) + "appliction: ");
 				level++;
-				Log.d(TAG, makePrefix(level) + "packageName: " + packageName);
-				Log.d(TAG, makePrefix(level) + "theme      : " + theme);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "packageName: " + packageName);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "theme      : " + theme);
 
-				PackageInfoX.dump(level, metaData);
+				PackageInfoX.dumpMetaData(level, metaData, flag);
+			}
+
+			public static boolean shouldLog(int flag)	 {
+				return hasFlag(flag, DUMP_APPLICATION);
 			}
 		}
 
-		public static class ActivityInfoX extends ActivityInfo implements
+		public static class ActivityInfoX extends ActivityInfo 
+		implements
 				Parcelable {
 			public IntentInfoX[] mIntents;
 			public PackageInfoX mPackageInfo;
@@ -597,13 +726,17 @@ public class ApkManifestParser {
 				return 0;
 			}
 
-			public void dump(int level) {
+			public void dump(int level, int flag) {
 				Log.d(TAG, makePrefix(level) + "activity:");
-				Log.d(TAG, makePrefix(level + 1) + "name : " + name);
-				Log.d(TAG, makePrefix(level + 1) + "icon : " + icon);
-				Log.d(TAG, makePrefix(level + 1) + "theme: " + theme);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "name : " + name);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "icon : " + icon);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "theme: " + theme);
 				
-				PackageInfoX.dump(level + 1, metaData);
+				PackageInfoX.dumpMetaData(level + 1, metaData, flag);
+			}
+
+			public static boolean shouldLog(int flag)	 {
+				return hasFlag(flag, DUMP_ACTIVITY);
 			}
 			
 			public void writeToParcel(Parcel out, int flags) {
@@ -631,6 +764,20 @@ public class ApkManifestParser {
 			}
 
 		}
+		
+		public static class ServiceInfoX extends ServiceInfo {
+			public PackageInfoX mPackageInfo;
+
+			public void dump(int level, int flag) {
+				if ((shouldLog(flag))) Log.d(TAG, " service: ");
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "name : " + name);
+			}
+
+			public static boolean shouldLog(int flag)	 {
+				return hasFlag(flag, DUMP_SERVICE);
+			}
+			
+		}
 
 		public static class IntentInfoX extends IntentFilter {
 			public String[] mActions;
@@ -641,32 +788,57 @@ public class ApkManifestParser {
 			public int mTargetSdkVersion;
 			public int mMaxSdkVersion;
 			
-			public void dump(int level) {		
-				Log.d(TAG, makePrefix(level) + "mUseSdk: ");
-				Log.d(TAG, makePrefix(level++) + "mMinSdkVersion: " + mMinSdkVersion);
-				Log.d(TAG, makePrefix(level++) + "mTargetSdkVersion: " + mTargetSdkVersion);
-				Log.d(TAG, makePrefix(level++) + "mMaxSdkVersion: " + mMaxSdkVersion);
+			public void dump(int level, int flag) {		
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "mUseSdk: ");
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mMinSdkVersion: " + mMinSdkVersion);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mTargetSdkVersion: " + mTargetSdkVersion);
+				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mMaxSdkVersion: " + mMaxSdkVersion);
+			}
+			
+			public static boolean shouldLog(int flag)	 {
+				return hasFlag(flag, DUMP_USES_SDK);
 			}
 		}
 		
-		public void dump(){
-			Log.d(TAG, "dump manefest info:");
-			dump(0);
+		static void dumpMetaData(int level, Bundle metaData, int flag){
+			if (hasFlag(flag, DUMP_META_DATA)) {
+
+				if (metaData != null) {
+					Log.d(TAG, makePrefix(level) + "metaData: ");
+					level++;
+					Iterator<String> it = metaData.keySet().iterator();
+					while (it.hasNext()) {
+						String key = it.next();
+						Log.d(TAG, makePrefix(level) + key + ": " + metaData.getString(key));
+					}
+				}
+			}
 		}
 		
-		public void dump(int level) {
+		public void dump() {
+			dump(0, FLAG_DUMP);
+		}
+		
+		void dump(int level, int flag) {
 			if (mUsesSdk != null) {
-				mUsesSdk.dump(level + 1);
+				mUsesSdk.dump(level + 1, flag);
 			}
 			
 			if (applicationInfo != null) {
-				((ApplicationInfoX)applicationInfo).dump(level + 1);
+				((ApplicationInfoX)applicationInfo).dump(level + 1, flag);
 			}
 			
-			if (activities != null && activities.length > 0) {
+			if (activities != null && activities.length > 0 && ActivityInfoX.shouldLog(flag)) {
 				Log.d(TAG, makePrefix(level) + "activities: ");
 				for (ActivityInfo a : activities) {
-					((ActivityInfoX)a).dump(level + 1);
+					((ActivityInfoX)a).dump(level + 1, flag);
+				}
+			}
+			
+			if (services != null && services.length > 0 && ServiceInfoX.shouldLog(flag)) {
+				Log.d(TAG, makePrefix(level) + "services: ");
+				for (ServiceInfo a : services) {
+					((ServiceInfoX)a).dump(level + 1, flag);
 				}
 			}
 		}
