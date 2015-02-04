@@ -11,6 +11,9 @@ public class MainActivity extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		String apkFile = getApplicationInfo().publicSourceDir;
+		ApkManifestParser.parseAPk(this, apkFile);
 	}
 
 	@Override

@@ -33,6 +33,10 @@ import android.util.Log;
 
 @SuppressLint("NewApi")
 public class ApkManifestParser {
+	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
+
+	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
+
 	private static final String TAG = ApkManifestParser.class.getSimpleName();
 
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
@@ -62,8 +66,13 @@ public class ApkManifestParser {
 	private static final String TAG_MANIFEST = "manifest";
 	
 	private static final boolean LOG_UN_HANDLED_ITEM = false;
+	
 
 	public static PackageInfoX parseAPk(Context context, String apkFile) {
+		return parseAPk(context, apkFile, true);
+	}
+
+	public static PackageInfoX parseAPk(Context context, String apkFile, boolean resolve) {
 		PackageInfoX info = new PackageInfoX();
 		
 		AssetManager assets;
@@ -76,9 +85,9 @@ public class ApkManifestParser {
 			parser = assets
 					.openXmlResourceParser(cookie, "AndroidManifest.xml");
 			parseApk(parser, info);
-			info.applicationInfo.publicSourceDir = apkFile;
-			info.applicationInfo.sourceDir = apkFile;
-			resolveParsedApk(info);
+			if (resolve) {
+				resolveParsedApk(info, apkFile);
+			}
 			
 //			parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
 //			dumpParser(parser);
@@ -111,7 +120,10 @@ public class ApkManifestParser {
 		return null;
 	}
 
-	private static void resolveParsedApk(PackageInfoX info) {
+	private static void resolveParsedApk(PackageInfoX info, String apkFile) {
+		info.applicationInfo.publicSourceDir = apkFile;
+		info.applicationInfo.sourceDir = apkFile;
+		
 		ApplicationInfo appInfo = info.applicationInfo;
 		
 		appInfo.packageName = info.packageName;
@@ -218,9 +230,9 @@ public class ApkManifestParser {
 				info.versionName = attName;
 			} else if (ATTR_VERSION_CODE.equals(attName)) {
 				info.versionCode = Integer.parseInt(attValue);
-			} else if ("sharedUserId".equals(attName)) {
+			} else if (ATTR_SHARED_USER_ID.equals(attName)) {
 				info.sharedUserId = (attValue);
-			} else if ("sharedUserLabel".equals(attName)) {
+			} else if (ATTR_SHARED_USER_LABEL.equals(attName)) {
 				info.sharedUserLabel = toResId(attValue);
 //			} else if ("installLocation".equals(attName)) {
 //				info.installLocation = toResId(attValue);
@@ -819,13 +831,14 @@ public class ApkManifestParser {
 			dump(0, FLAG_DUMP);
 		}
 		
-		void dump(int level, int flag) {
+		public void dump(int level, int flag) {
+			level = level + 1;
 			if (mUsesSdk != null) {
-				mUsesSdk.dump(level + 1, flag);
+				mUsesSdk.dump(level, flag);
 			}
 			
 			if (applicationInfo != null) {
-				((ApplicationInfoX)applicationInfo).dump(level + 1, flag);
+				((ApplicationInfoX)applicationInfo).dump(level, flag);
 			}
 			
 			if (activities != null && activities.length > 0 && ActivityInfoX.shouldLog(flag)) {
