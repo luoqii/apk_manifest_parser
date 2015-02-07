@@ -28,4 +28,4 @@ install:
 before_script:
 
 script:
-  - ./gradlew iD
+  - ./gradlew assembleDebug
