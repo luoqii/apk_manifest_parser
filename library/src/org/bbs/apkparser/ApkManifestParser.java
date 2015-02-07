@@ -3,31 +3,25 @@ package org.bbs.apkparser;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.Set;
 
-import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ActivityInfoX;
-import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ApplicationInfoX;
-import org.bbs.apkparser.ApkManifestParser.PackageInfoX.IntentInfoX;
-import org.bbs.apkparser.ApkManifestParser.PackageInfoX.ServiceInfoX;
-import org.bbs.apkparser.ApkManifestParser.PackageInfoX.UsesSdkX;
+import org.bbs.apkparser.PackageInfoX.ActivityInfoX;
+import org.bbs.apkparser.PackageInfoX.ApplicationInfoX;
+import org.bbs.apkparser.PackageInfoX.IntentInfoX;
+import org.bbs.apkparser.PackageInfoX.ServiceInfoX;
+import org.bbs.apkparser.PackageInfoX.UsesSdkX;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageItemInfo;
 import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -37,7 +31,7 @@ public class ApkManifestParser {
 
 	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
 
-	private static final String TAG = ApkManifestParser.class.getSimpleName();
+	static final String TAG = ApkManifestParser.class.getSimpleName();
 
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
 	private static final String TAG_SERVICE = "service";
@@ -676,184 +670,11 @@ public class ApkManifestParser {
 		}
 	}
 
-	private static String makePrefix(int depth) {
+	static String makePrefix(int depth) {
 		StringBuffer b = new StringBuffer();
 		for (int i = 0; i < depth; i++) {
 			b.append("  ");
 		}
 		return b.toString();
-	}
-
-	/**
-	 * all new-added member MUST has a 'm" prefix.
-	 * 
-	 * @author bysong
-	 *
-	 */
-	public static class PackageInfoX extends PackageInfo {
-		public static final int DUMP_APPLICATION = 1 << 0;
-		public static final int DUMP_ACTIVITY = 1 << 1 | DUMP_APPLICATION;
-		public static final int DUMP_USES_SDK = 1 << 2;
-		public static final int DUMP_META_DATA = 1 << 3 | DUMP_APPLICATION;
-		public static final int DUMP_SERVICE = 1 << 4 | DUMP_APPLICATION;
-		
-		public static final int DUMP_ALL = 0xFFFF;
-		public static final int FLAG_DUMP = DUMP_SERVICE;
-		
-		public UsesSdkX mUsesSdk;
-		
-		// evaluate by application.
-		public String mLibPath;
-		
-		public static boolean hasFlag(int flag, int mask) {
-			return (flag & mask) == mask;
-		}
-
-		public static class ApplicationInfoX extends ApplicationInfo {
-
-			public boolean mDebuggable;
-			public boolean mAllowTaskReparenting;
-
-			public void dump(int level, int flag) {	
-				Log.d(TAG, makePrefix(level) + "appliction: ");
-				level++;
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "packageName: " + packageName);
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "theme      : " + theme);
-
-				PackageInfoX.dumpMetaData(level, metaData, flag);
-			}
-
-			public static boolean shouldLog(int flag)	 {
-				return hasFlag(flag, DUMP_APPLICATION);
-			}
-		}
-
-		public static class ActivityInfoX extends ActivityInfo 
-		implements
-				Parcelable {
-			public IntentInfoX[] mIntents;
-			public PackageInfoX mPackageInfo;
-
-			public int describeContents() {
-				return 0;
-			}
-
-			public void dump(int level, int flag) {
-				Log.d(TAG, makePrefix(level) + "activity:");
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "name : " + name);
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "icon : " + icon);
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "theme: " + theme);
-				
-				PackageInfoX.dumpMetaData(level + 1, metaData, flag);
-			}
-
-			public static boolean shouldLog(int flag)	 {
-				return hasFlag(flag, DUMP_ACTIVITY);
-			}
-			
-			public void writeToParcel(Parcel out, int flags) {
-				super.writeToParcel(out, flags);
-				out.writeParcelableArray(mIntents, flags);
-			}
-
-			public static final Parcelable.Creator<ActivityInfoX> CREATOR = new Parcelable.Creator<ActivityInfoX>() {
-				public ActivityInfoX createFromParcel(Parcel in) {
-					return new ActivityInfoX(in);
-				}
-
-				public ActivityInfoX[] newArray(int size) {
-					return new ActivityInfoX[size];
-				}
-			};
-			
-			public ActivityInfoX(){
-				
-			}
-
-			private ActivityInfoX(Parcel in) {
-//				super(in);
-//				mData = in.readInt();
-			}
-
-		}
-		
-		public static class ServiceInfoX extends ServiceInfo {
-			public PackageInfoX mPackageInfo;
-
-			public void dump(int level, int flag) {
-				if ((shouldLog(flag))) Log.d(TAG, " service: ");
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level + 1) + "name : " + name);
-			}
-
-			public static boolean shouldLog(int flag)	 {
-				return hasFlag(flag, DUMP_SERVICE);
-			}
-			
-		}
-
-		public static class IntentInfoX extends IntentFilter {
-			public String[] mActions;
-		}
-		
-		public static class UsesSdkX {
-			public int mMinSdkVersion;
-			public int mTargetSdkVersion;
-			public int mMaxSdkVersion;
-			
-			public void dump(int level, int flag) {		
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level) + "mUseSdk: ");
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mMinSdkVersion: " + mMinSdkVersion);
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mTargetSdkVersion: " + mTargetSdkVersion);
-				if (shouldLog(flag)) Log.d(TAG, makePrefix(level++) + "mMaxSdkVersion: " + mMaxSdkVersion);
-			}
-			
-			public static boolean shouldLog(int flag)	 {
-				return hasFlag(flag, DUMP_USES_SDK);
-			}
-		}
-		
-		static void dumpMetaData(int level, Bundle metaData, int flag){
-			if (hasFlag(flag, DUMP_META_DATA)) {
-
-				if (metaData != null) {
-					Log.d(TAG, makePrefix(level) + "metaData: ");
-					level++;
-					Iterator<String> it = metaData.keySet().iterator();
-					while (it.hasNext()) {
-						String key = it.next();
-						Log.d(TAG, makePrefix(level) + key + ": " + metaData.getString(key));
-					}
-				}
-			}
-		}
-		
-		public void dump() {
-			dump(0, FLAG_DUMP);
-		}
-		
-		public void dump(int level, int flag) {
-			level = level + 1;
-			if (mUsesSdk != null) {
-				mUsesSdk.dump(level, flag);
-			}
-			
-			if (applicationInfo != null) {
-				((ApplicationInfoX)applicationInfo).dump(level, flag);
-			}
-			
-			if (activities != null && activities.length > 0 && ActivityInfoX.shouldLog(flag)) {
-				Log.d(TAG, makePrefix(level) + "activities: ");
-				for (ActivityInfo a : activities) {
-					((ActivityInfoX)a).dump(level + 1, flag);
-				}
-			}
-			
-			if (services != null && services.length > 0 && ServiceInfoX.shouldLog(flag)) {
-				Log.d(TAG, makePrefix(level) + "services: ");
-				for (ServiceInfo a : services) {
-					((ServiceInfoX)a).dump(level + 1, flag);
-				}
-			}
-		}
 	}
 }

@@ -1,4 +1,7 @@
-package org.bbs.apkparser;
+package org.bbs.demo.apkparser;
+
+import org.bbs.apkparser.ApkManifestParser;
+import org.bbs.apkparser.demo.R;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
