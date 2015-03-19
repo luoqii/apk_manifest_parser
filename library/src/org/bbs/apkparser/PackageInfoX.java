@@ -133,7 +133,7 @@ import android.util.Log;
 			
 			public void dump(int level, int flag) {		
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "mUseSdk: ");
-                String prefix = ApkManifestParser.makePrefix(level++);
+                String prefix = ApkManifestParser.makePrefix(level+1);
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mMinSdkVersion     : " + mMinSdkVersion);
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mTargetSdkVersion  : " + mTargetSdkVersion);
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mMaxSdkVersion     : " + mMaxSdkVersion);
