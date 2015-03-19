@@ -25,8 +25,8 @@ import android.util.Log;
 		public static final int DUMP_META_DATA = 1 << 3 | DUMP_APPLICATION;
 		public static final int DUMP_SERVICE = 1 << 4 | DUMP_APPLICATION;
 		
-		public static final int DUMP_ALL = 0xFFFF;
-		public static final int FLAG_DUMP = DUMP_SERVICE;
+		public static final int DUMP_ALL = 0xEFFF;
+		public static final int FLAG_DUMP = DUMP_ALL;
 		
 		public PackageInfoX.UsesSdkX mUsesSdk;
 		
@@ -43,10 +43,10 @@ import android.util.Log;
 			public boolean mAllowTaskReparenting;
 
 			public void dump(int level, int flag) {	
-				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "appliction: ");
 				level++;
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "packageName: " + packageName);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "theme      : " + theme);
+				String prefix = ApkManifestParser.makePrefix(level);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "packageName: " + packageName);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "theme      : " + theme);
 
 				PackageInfoX.dumpMetaData(level, metaData, flag);
 			}
@@ -57,8 +57,8 @@ import android.util.Log;
 		}
 
 		public static class ActivityInfoX extends ActivityInfo 
-		implements
-				Parcelable {
+		implements Parcelable 
+		{
 			public PackageInfoX.IntentInfoX[] mIntents;
 			public PackageInfoX mPackageInfo;
 
@@ -68,9 +68,10 @@ import android.util.Log;
 
 			public void dump(int level, int flag) {
 				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "activity:");
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "name : " + name);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "icon : " + icon);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "theme: " + theme);
+				String prefix = ApkManifestParser.makePrefix(level + 1);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "name : " + name);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "icon : " + icon);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "theme: " + theme);
 				
 				PackageInfoX.dumpMetaData(level + 1, metaData, flag);
 			}
@@ -109,8 +110,10 @@ import android.util.Log;
 			public PackageInfoX mPackageInfo;
 
 			public void dump(int level, int flag) {
-				if ((shouldLog(flag))) Log.d(ApkManifestParser.TAG, " service: ");
+				if ((shouldLog(flag))) Log.d(ApkManifestParser.TAG, "service: ");
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "name : " + name);
+
+				PackageInfoX.dumpMetaData(level + 2, metaData, flag);
 			}
 
 			public static boolean shouldLog(int flag)	 {
@@ -130,9 +133,10 @@ import android.util.Log;
 			
 			public void dump(int level, int flag) {		
 				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "mUseSdk: ");
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level++) + "mMinSdkVersion: " + mMinSdkVersion);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level++) + "mTargetSdkVersion: " + mTargetSdkVersion);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level++) + "mMaxSdkVersion: " + mMaxSdkVersion);
+                String prefix = ApkManifestParser.makePrefix(level++);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mMinSdkVersion     : " + mMinSdkVersion);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mTargetSdkVersion  : " + mTargetSdkVersion);
+				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mMaxSdkVersion     : " + mMaxSdkVersion);
 			}
 			
 			public static boolean shouldLog(int flag)	 {
@@ -160,13 +164,15 @@ import android.util.Log;
 		}
 		
 		public void dump(int level, int flag) {
+			Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "parsed manifest:");
 			level = level + 1;
 			if (mUsesSdk != null) {
 				mUsesSdk.dump(level, flag);
 			}
 			
-			if (applicationInfo != null) {
-				((PackageInfoX.ApplicationInfoX)applicationInfo).dump(level, flag);
+			if (applicationInfo != null && ApplicationInfoX.shouldLog(flag)) {
+				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "application: ");
+				((PackageInfoX.ApplicationInfoX)applicationInfo).dump(level + 1, flag);
 			}
 			
 			if (activities != null && activities.length > 0 && ActivityInfoX.shouldLog(flag)) {

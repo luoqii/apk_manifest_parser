@@ -27,37 +27,36 @@ import android.util.Log;
 
 @SuppressLint("NewApi")
 public class ApkManifestParser {
-	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
-
-	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
-
 	static final String TAG = ApkManifestParser.class.getSimpleName();
-
+	
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
+
+	private static final String TAG_CATEGORY = "category";
+	private static final String TAG_INTENT_FILTER = "intent-filter";
+	private static final String TAG_ACTION = "action";
+	private static final String TAG_ACTIVITY = "activity";
+	private static final String TAG_APPLICATION = "application";
+	private static final String TAG_MANIFEST = "manifest";
+	private static final String TAG_USES_SDK = "uses-sdk";
+	private static final String TAG_META_DATA = "meta-data";
 	private static final String TAG_SERVICE = "service";
+	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
+	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
 	private static final String ATTR_BACKUP_AGENT = "backupAgent";
 	private static final String ATTR_ALLOW_TASK_REPARENTING = "allowTaskReparenting";
 	private static final String ATTR_DEBUGGABLE = "debuggable";
 	private static final String ATTR_PROCESS = "process";
-	private static final String TAG_META_DATA = "meta-data";
 	private static final String ATTR_BANNER = "banner";
 	private static final String ATTR_LOGO = "logo";
-	private static final String TAG_USES_SDK = "uses-sdk";
 	private static final String ATTR_RESOURCE = "resource";
 	private static final String ATTR_VALUE = "value";
 	private static final String ATTR_ICON = "icon";
 	private static final String ATTR_THEME = "theme";
 	private static final String ATTR_LABEL = "label";
-	private static final String TAG_CATEGORY = "category";
-	private static final String TAG_INTENT_FILTER = "intent-filter";
-	private static final String TAG_ACTION = "action";
-	private static final String TAG_ACTIVITY = "activity";
 	private static final String ATTR_VERSION_NAME = "versionName";
 	private static final String ATTR_VERSION_CODE = "versionCode";
-	private static final String TAG_APPLICATION = "application";
 	private static final String ATTR_NAME = "name";
 	private static final String ATTR_PACKAGE = "package";
-	private static final String TAG_MANIFEST = "manifest";
 	
 	private static final boolean LOG_UN_HANDLED_ITEM = false;
 	
@@ -85,29 +84,20 @@ public class ApkManifestParser {
 			
 //			parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
 //			dumpParser(parser);
-			info.dump();
+//			info.dump();
 
 			return info;
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NoSuchMethodException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-			// } catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
