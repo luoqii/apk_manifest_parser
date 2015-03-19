@@ -13,11 +13,14 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
 import android.content.pm.PackageItemInfo;
+import android.content.pm.PermissionGroupInfo;
+import android.content.pm.PermissionInfo;
 import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.content.res.XmlResourceParser;
@@ -27,6 +30,24 @@ import android.util.Log;
 
 @SuppressLint("NewApi")
 public class ApkManifestParser {
+	private static final String TAG_PERMISSION_TREE = "permission-tree";
+
+	private static final String TAG_PERMISSION_GROUP = "permission-group";
+
+	private static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
+
+	private static final String ATTR_PERMISSION_GROUP = "permissionGroup";
+
+	private static final String ATTR_DESCRIPTION = "description";
+
+	private static final String TAG_PERMISSION = "permission";
+
+	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
+
+	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
+
+	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
+
 	static final String TAG = ApkManifestParser.class.getSimpleName();
 	
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
@@ -39,7 +60,9 @@ public class ApkManifestParser {
 	private static final String TAG_MANIFEST = "manifest";
 	private static final String TAG_USES_SDK = "uses-sdk";
 	private static final String TAG_META_DATA = "meta-data";
-	private static final String TAG_SERVICE = "service";
+    private static final String TAG_SERVICE = "service";
+    private static final String TAG_USES_PERMISSION = "uses-permission";
+
 	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
 	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
 	private static final String ATTR_BACKUP_AGENT = "backupAgent";
@@ -66,6 +89,10 @@ public class ApkManifestParser {
 	}
 
 	public static PackageInfoX parseAPk(Context context, String apkFile, boolean resolve) {
+		return parseAPk(context, apkFile, resolve, false);
+	}
+	
+	public static PackageInfoX parseAPk(Context context, String apkFile, boolean resolve, boolean debug) {
 		PackageInfoX info = new PackageInfoX();
 		
 		AssetManager assets;
@@ -82,9 +109,11 @@ public class ApkManifestParser {
 				resolveParsedApk(info, apkFile);
 			}
 			
-//			parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
-//			dumpParser(parser);
-//			info.dump();
+			if (debug) {
+				parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
+				dumpParser(parser);
+				info.dump();
+			}
 
 			return info;
 		} catch (InstantiationException e) {
@@ -117,8 +146,11 @@ public class ApkManifestParser {
 			} else if (appInfo.name.startsWith(".")) {
 				appInfo.name = appInfo.packageName + "" + appInfo.name;
 			}
+			appInfo.className = appInfo.name;
+		} else {
+			appInfo.className = Application.class.getName();
+			appInfo.name = appInfo.className;
 		}
-		appInfo.className = appInfo.name;
 		
 		if (info.mUsesSdk != null) {
 			UsesSdkX sdk = info.mUsesSdk;
@@ -240,8 +272,16 @@ public class ApkManifestParser {
 			if (TAG_APPLICATION.equals(tagName)) {
 				parseApplication(parser, info);
 			} else if (TAG_USES_SDK.equals(tagName)) {
-				parseUsesSdk(parser, info);
-			} else {
+                parseUsesSdk(parser, info);
+            } else if (TAG_USES_PERMISSION.equals(tagName)) {
+                parseUsesPermission(parser, info);
+            } else if (TAG_PERMISSION.equals(tagName)) {
+                parsePermission(parser, info);
+            } else if (TAG_PERMISSION_GROUP.equals(tagName)) {
+                parsePermissionGroup(parser, info);
+            }  else if (TAG_PERMISSION_TREE.equals(tagName)) {
+                parsePermissionTree(parser, info);
+            } else {
 				if (LOG_UN_HANDLED_ITEM) {
 					Log.w(TAG, "un-handled tag: " + tagName);
 				}
@@ -249,14 +289,21 @@ public class ApkManifestParser {
 		}
 
 	}
-	
-	private static int toResId(String attValue) {
-		if (attValue.startsWith("")) {
+
+    private static int toResId(String attValue) {
+		if (attValue.startsWith("@")) {
 			return Integer.parseInt(attValue.substring(1));
 		}
+		if (attValue.startsWith("0X") || attValue.startsWith("0x")) {
+			return Integer.parseInt(attValue.substring(2), 16);
+		}
 		
-		throw new RuntimeException("res attValue must start with @.");
-//		return -1;
+		try {
+			return Integer.parseInt(attValue);
+		} catch (Exception e) {
+			throw new RuntimeException("invalid int string: " + attValue);
+		}
+		
 	}
 	
 	private static boolean toBoolean(String attValue) {
@@ -267,17 +314,18 @@ public class ApkManifestParser {
 	}
 
 	private static void parseUsesSdk(XmlResourceParser parser,
-			PackageInfoX info) {// parse attr
+			PackageInfoX info) {
+		// parse attr
 		UsesSdkX sdk = new UsesSdkX();
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
 			String attName = parser.getAttributeName(i);
 			String attValue = parser.getAttributeValue(i);
-			if ("minSdkVersion".equals(attName)) {
+			if (ATTR_MIN_SDK_VERSION.equals(attName)) {
 				sdk.mMinSdkVersion = Integer.parseInt(attValue);
-			} else if ("maxSdkVersion".equals(attName)) {
+			} else if (ATTR_MAX_SDK_VERSION.equals(attName)) {
 				sdk.mMaxSdkVersion = Integer.parseInt(attValue);
-			} else if ("targetSdkVersion".equals(attName)) {
+			} else if (ATTR_TARGET_SDK_VERSION.equals(attName)) {
 				sdk.mTargetSdkVersion = Integer.parseInt(attValue);
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
@@ -288,6 +336,150 @@ public class ApkManifestParser {
 		
 		info.mUsesSdk = sdk;
 	}
+
+    private static void parseUsesPermission(XmlResourceParser parser,
+                                     PackageInfoX info) {
+    	// parse attr
+        PackageInfoX.UsesPermissionX perm = new PackageInfoX.UsesPermissionX();
+        final int attCount = parser.getAttributeCount();
+        for (int i = 0; i < attCount; i++) {
+            String attName = parser.getAttributeName(i);
+            String attValue = parser.getAttributeValue(i);
+            if (ATTR_MAX_SDK_VERSION.equals(attName)) {
+                perm.mMaxSdkVersion = Integer.parseInt(attValue);
+            } else if (ATTR_NAME.equals(attName)) {
+                perm.mName = attValue;
+            } else {
+                if (LOG_UN_HANDLED_ITEM) {
+                    Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+                }
+            }
+        }
+
+        if (info.mUsedPermissions == null) {
+            info.mUsedPermissions = new PackageInfoX.UsesPermissionX[1];
+
+            info.mUsedPermissions[0] = perm;
+        } else {
+            int len = info.mUsedPermissions.length;
+            PackageInfoX.UsesPermissionX[] permissions = new PackageInfoX.UsesPermissionX[len + 1];
+            System.arraycopy(info.mUsedPermissions, 0, permissions, 0, len);
+            permissions[len] = perm;
+
+            info.mUsedPermissions = permissions;
+        }
+    }
+
+    private static void parsePermission(XmlResourceParser parser,
+                                     PackageInfoX info) {
+    	// parse attr
+    	PermissionInfo perm = new PermissionInfo();
+        final int attCount = parser.getAttributeCount();
+        for (int i = 0; i < attCount; i++) {
+        	String attName = parser.getAttributeName(i);
+        	String attValue = parser.getAttributeValue(i);
+        	if (ATTR_NAME.equals(attName)) {
+        		perm.name = attValue;
+        	} else if (ATTR_LABEL.equals(attName)) {
+        		perm.labelRes = toResId(attValue);
+        	} else if (ATTR_DESCRIPTION.equals(attName)) {
+        		perm.descriptionRes = toResId(attValue);
+        	} else if (ATTR_ICON.equals(attName)) {
+        		//              perm.ic = toResId(attValue);
+        	} else if (ATTR_PERMISSION_GROUP.equals(attName)) {
+        		perm.group = (attValue);
+        	} else if (ATTR_PROTECTION_LEVEL.equals(attName)) {
+        		perm.protectionLevel = toResId(attValue);
+        	} else {
+        		if (LOG_UN_HANDLED_ITEM) {
+        			Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+        		}
+        	}
+        }
+
+        if (info.permissions == null) {
+            info.permissions = new PermissionInfo[1];
+
+            info.permissions[0] = perm;
+        } else {
+            int len = info.permissions.length;
+            PermissionInfo[] permissions = new PermissionInfo[len + 1];
+            System.arraycopy(info.permissions, 0, permissions, 0, len);
+            permissions[len] = perm;
+
+            info.permissions = permissions;
+        }
+    }
+
+    private static void parsePermissionGroup(XmlResourceParser parser,
+                                     PackageInfoX info) {
+    	// parse attr
+    	PermissionGroupInfo perm = new PermissionGroupInfo();
+        final int attCount = parser.getAttributeCount();
+        for (int i = 0; i < attCount; i++) {
+        	String attName = parser.getAttributeName(i);
+        	String attValue = parser.getAttributeValue(i);
+        	if (ATTR_NAME.equals(attName)) {
+        		perm.name = attValue;
+        	} else if (ATTR_LABEL.equals(attName)) {
+        		perm.labelRes = toResId(attValue);
+        	} else if (ATTR_DESCRIPTION.equals(attName)) {
+        		perm.descriptionRes = toResId(attValue);
+        	} else if (ATTR_ICON.equals(attName)) {
+        		//              perm.ic = toResId(attValue);
+        	} else {
+        		if (LOG_UN_HANDLED_ITEM) {
+        			Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+        		}
+        	}
+        }
+
+        if (info.mPermissionGroups == null) {
+            info.mPermissionGroups = new PermissionGroupInfo[1];
+
+            info.mPermissionGroups[0] = perm;
+        } else {
+            int len = info.permissions.length;
+            PermissionGroupInfo[] permissions = new PermissionGroupInfo[len + 1];
+            System.arraycopy(info.permissions, 0, permissions, 0, len);
+            permissions[len] = perm;
+
+            info.mPermissionGroups = permissions;
+        }
+    }
+
+    private static void parsePermissionTree(XmlResourceParser parser,
+                                     PackageInfoX info) {
+    	// parse attr
+    	PackageInfoX.PermissionTreeX perm = new PackageInfoX.PermissionTreeX();
+        final int attCount = parser.getAttributeCount();
+        for (int i = 0; i < attCount; i++) {
+        	String attName = parser.getAttributeName(i);
+        	String attValue = parser.getAttributeValue(i);
+        	if (ATTR_NAME.equals(attName)) {
+        		perm.mName = attValue;
+        	} else if (ATTR_LABEL.equals(attName)) {
+        		perm.mLabelRes = toResId(attValue);
+        	} else {
+        		if (LOG_UN_HANDLED_ITEM) {
+        			Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
+        		}
+        	}
+        }
+
+        if (info.mPermissionTrees == null) {
+            info.mPermissionTrees = new PackageInfoX.PermissionTreeX[1];
+
+            info.mPermissionTrees[0] = perm;
+        } else {
+            int len = info.mPermissionTrees.length;
+            PackageInfoX.PermissionTreeX[] permissions = new PackageInfoX.PermissionTreeX[len + 1];
+            System.arraycopy(info.permissions, 0, permissions, 0, len);
+            permissions[len] = perm;
+
+            info.mPermissionTrees = permissions;
+        }
+    }
 
 	private static void parseApplication(XmlResourceParser parser,
 			PackageInfoX info) throws XmlPullParserException, IOException {
@@ -363,7 +555,7 @@ public class ApkManifestParser {
 				info.exported = Boolean.parseBoolean(attName);
 			} else if ("enabled".equals(attName)) {
 				info.enabled = Boolean.parseBoolean(attName);
-			} else if ("description".equals(attName)) {
+			} else if (ATTR_DESCRIPTION.equals(attName)) {
 				info.descriptionRes = toResId(attValue);
 			}  
 		}
@@ -626,6 +818,8 @@ public class ApkManifestParser {
 	private static void dumpParser(XmlResourceParser parser) {
 		int depth = 0;
 		int eventType;
+		Log.d(TAG,
+				makePrefix(depth) + "" + "orignal manifest");
 		try {
 			eventType = parser.getEventType();
 			while (eventType != XmlPullParser.END_DOCUMENT) {
