@@ -30,26 +30,7 @@ import android.util.Log;
 
 @SuppressLint("NewApi")
 public class ApkManifestParser {
-	private static final String TAG_PERMISSION_TREE = "permission-tree";
-
-	private static final String TAG_PERMISSION_GROUP = "permission-group";
-
-	private static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
-
-	private static final String ATTR_PERMISSION_GROUP = "permissionGroup";
-
-	private static final String ATTR_DESCRIPTION = "description";
-
-	private static final String TAG_PERMISSION = "permission";
-
-	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
-
-	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
-
-	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
-
 	static final String TAG = ApkManifestParser.class.getSimpleName();
-	
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
 
 	private static final String TAG_CATEGORY = "category";
@@ -62,6 +43,9 @@ public class ApkManifestParser {
 	private static final String TAG_META_DATA = "meta-data";
     private static final String TAG_SERVICE = "service";
     private static final String TAG_USES_PERMISSION = "uses-permission";
+	private static final String TAG_PERMISSION = "permission";
+	private static final String TAG_PERMISSION_TREE = "permission-tree";
+	private static final String TAG_PERMISSION_GROUP = "permission-group";
 
 	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
 	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
@@ -80,9 +64,14 @@ public class ApkManifestParser {
 	private static final String ATTR_VERSION_CODE = "versionCode";
 	private static final String ATTR_NAME = "name";
 	private static final String ATTR_PACKAGE = "package";
+	private static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
+	private static final String ATTR_PERMISSION_GROUP = "permissionGroup";
+	private static final String ATTR_DESCRIPTION = "description";
+	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
+	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
+	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
 	
 	private static final boolean LOG_UN_HANDLED_ITEM = false;
-	
 
 	public static PackageInfoX parseAPk(Context context, String apkFile) {
 		return parseAPk(context, apkFile, true);
