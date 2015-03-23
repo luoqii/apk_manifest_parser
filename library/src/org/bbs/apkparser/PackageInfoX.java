@@ -52,10 +52,14 @@ import android.util.Log;
 			public void dump(int level, int flag) {	
 				level++;
 				String prefix = ApkManifestParser.makePrefix(level);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "packageName: " + packageName);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "theme      : " + theme);
+				Log.d(ApkManifestParser.TAG, prefix + "packageName: " + packageName);
+				Log.d(ApkManifestParser.TAG, prefix + "theme      : " + theme);
 
 				PackageInfoX.dumpMetaData(level, metaData, flag);
+			}
+			
+			public void dump() {
+				dump(0, DUMP_APPLICATION);
 			}
 
 			public static boolean shouldLog(int flag)	 {
@@ -76,11 +80,15 @@ import android.util.Log;
 			public void dump(int level, int flag) {
 				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "activity:");
 				String prefix = ApkManifestParser.makePrefix(level + 1);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "name : " + name);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "icon : " + icon);
-				if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "theme: " + theme);
+				Log.d(ApkManifestParser.TAG, prefix + "name : " + name);
+				Log.d(ApkManifestParser.TAG, prefix + "icon : " + icon);
+				Log.d(ApkManifestParser.TAG, prefix + "theme: " + theme);
 				
 				PackageInfoX.dumpMetaData(level + 1, metaData, flag);
+			}
+			
+			public void dump() {
+				dump(0, DUMP_ACTIVITY);
 			}
 
 			public static boolean shouldLog(int flag)	 {
@@ -117,12 +125,14 @@ import android.util.Log;
 			public PackageInfoX mPackageInfo;
 
 			public void dump(int level, int flag) {
-				if ((shouldLog(flag))) {
-					Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "service: ");
-					Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "  name   : " + name);
-				}
+				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "service: ");
+				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level + 1) + "  name : " + name);
 
-				PackageInfoX.dumpMetaData(level + 2, metaData, flag);
+				PackageInfoX.dumpMetaData(level + 1, metaData, flag);
+			}
+			
+			public void dump() {
+				dump(0, DUMP_SERVICE);
 			}
 
 			public static boolean shouldLog(int flag)	 {
@@ -164,6 +174,10 @@ import android.util.Log;
             if (shouldLog(flag)) Log.d(ApkManifestParser.TAG, prefix + "mMaxSdkVersion : " + mMaxSdkVersion);
         }
 
+		public void dump() {
+			dump(0, DUMP_PERMISSION);
+		}
+
         public static boolean shouldLog(int flag)	 {
             return hasFlag(flag, DUMP_PERMISSION);
         }
@@ -201,11 +215,11 @@ import android.util.Log;
 			}
 		}
 		
-		public void dump() {
-			dump(0, FLAG_DUMP);
+		public void dump(int flag) {
+			dump(0, flag);
 		}
 		
-		public void dump(int level, int flag) {
+		private void dump(int level, int flag) {
 			Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "parsed manifest:");
 			level = level + 1;
 			if (mUsesSdk != null) {
@@ -214,9 +228,11 @@ import android.util.Log;
 			
 			if (hasFlag(flag, DUMP_PERMISSION)) {
 				if (permissions != null && permissions.length > 0) {
-					Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "permission: ");
+					Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "permissions: ");
 					for (PermissionInfo p : permissions){
 						String prefix = ApkManifestParser.makePrefix(level + 1);
+						Log.d(ApkManifestParser.TAG, prefix + "permission;");
+						prefix = ApkManifestParser.makePrefix(level + 2);
 						Log.d(ApkManifestParser.TAG, prefix + "name           : " + p.name);
 						Log.d(ApkManifestParser.TAG, prefix + "protectionLevel: " + p.protectionLevel);
 						Log.d(ApkManifestParser.TAG, prefix + "descriptionRes : " + p.descriptionRes);
@@ -228,11 +244,12 @@ import android.util.Log;
 					Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level) + "permissionGroup: ");
 					for (PermissionGroupInfo p : mPermissionGroups){
 						String prefix = ApkManifestParser.makePrefix(level + 1);
+						Log.d(ApkManifestParser.TAG, prefix + "permissiongroup: " + p.name);
+						prefix = ApkManifestParser.makePrefix(level + 2);
 						Log.d(ApkManifestParser.TAG, prefix + "name           : " + p.name);
 						Log.d(ApkManifestParser.TAG, prefix + "descriptionRes : " + p.descriptionRes);
 						Log.d(ApkManifestParser.TAG, prefix + "descriptionRes : " + p.labelRes);
 					}
-					
 				}
 			}
 			

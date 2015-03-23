@@ -101,7 +101,7 @@ public class ApkManifestParser {
 			if (debug) {
 				parser = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
 				dumpParser(parser);
-				info.dump();
+				info.dump(PackageInfoX.DUMP_ALL);
 			}
 
 			return info;
@@ -583,6 +583,7 @@ public class ApkManifestParser {
 	private static void parseMetaData(XmlResourceParser parser, Bundle metaData) {
 		String key = null;
 		String value = null;
+		int intValue = -1;
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
 			String attName = parser.getAttributeName(i);
@@ -592,9 +593,7 @@ public class ApkManifestParser {
 			} else if (ATTR_VALUE.equals(attName)) {
 				value = attValue;
 			} else if (ATTR_RESOURCE.equals(attName)) {
-				if (attValue.startsWith("@")) {
-					value = attValue;
-				}
+				intValue = toResId(attValue);
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
 					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);
@@ -602,7 +601,11 @@ public class ApkManifestParser {
 			}
 		}
 		
-		metaData.putString(key, value);		
+		if (intValue != -1) {
+			metaData.putInt(key, intValue);
+		} else {
+			metaData.putString(key, value);
+		}
 	}
 
 	private static void parseActivity(XmlResourceParser parser,
@@ -846,7 +849,7 @@ public class ApkManifestParser {
 	static String makePrefix(int depth) {
 		StringBuffer b = new StringBuffer();
 		for (int i = 0; i < depth; i++) {
-			b.append("  ");
+			b.append(" ");
 		}
 		return b.toString();
 	}
