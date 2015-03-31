@@ -151,9 +151,15 @@ public class ApkManifestParser {
 				sdk.mTargetSdkVersion = sdk.mMaxSdkVersion;
 			}
 			
-			if (sdk.mMaxSdkVersion > 0) {
+			if (sdk.mTargetSdkVersion > 0) {
 				appInfo.targetSdkVersion = sdk.mTargetSdkVersion;
 			}
+			if (sdk.mMinSdkVersion == 0) {
+				// http://developer.android.com/guide/topics/manifest/uses-sdk-element.html
+				sdk.mMinSdkVersion = 1;
+			}
+		} else {
+			Log.w(TAG, "no <uses-sdk> in AndroidManifest.xml!");
 		}
 		
 		if (info.activities != null && info.activities.length > 0) {
