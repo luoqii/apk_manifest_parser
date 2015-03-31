@@ -1,6 +1,7 @@
 package org.bbs.demo.apkparser;
 
 import org.bbs.apkparser.ApkManifestParser;
+import org.bbs.apkparser.PackageInfoX;
 import org.bbs.apkparser.demo.R;
 
 import android.os.Bundle;
@@ -16,7 +17,7 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 		
 		String apkFile = getApplicationInfo().publicSourceDir;
-		ApkManifestParser.parseAPk(this, apkFile).dump();
+		ApkManifestParser.parseAPk(this, apkFile).dump(PackageInfoX.DUMP_ALL);
 	}
 
 	@Override

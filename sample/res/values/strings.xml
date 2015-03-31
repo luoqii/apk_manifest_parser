@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">ApkManifestParser</string>
-    <string name="hello_world">Hello world! use 'adb logcat' to see output.</string>
+    <string name="hello_world">Hello world! \nuse \'adb logcat\' to see output.</string>
     <string name="action_settings">Settings</string>
 
     <string name="app_meta_data_3_resource">app_meta_data_3_resource</string>
