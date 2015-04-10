@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 
 import org.bbs.apkparser.PackageInfoX.ActivityInfoX;
 import org.bbs.apkparser.PackageInfoX.ApplicationInfoX;
-import org.bbs.apkparser.PackageInfoX.IntentInfoX;
+import org.bbs.apkparser.PackageInfoX.IntentFilterX;
 import org.bbs.apkparser.PackageInfoX.ServiceInfoX;
 import org.bbs.apkparser.PackageInfoX.UsesSdkX;
 import org.xmlpull.v1.XmlPullParser;
@@ -15,6 +15,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
+import android.content.IntentFilter;
+import android.content.IntentFilter.MalformedMimeTypeException;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
@@ -25,6 +27,7 @@ import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
+import android.os.PatternMatcher;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -70,6 +73,21 @@ public class ApkManifestParser {
 	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
 	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
 	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
+	
+	// copy from InentFilter
+    private static final String SGLOB_STR = "sglob";
+    private static final String PREFIX_STR = "prefix";
+    private static final String LITERAL_STR = "literal";
+    private static final String PATH_STR = "path";
+    private static final String PORT_STR = "port";
+    private static final String HOST_STR = "host";
+    private static final String AUTH_STR = "auth";
+    private static final String SSP_STR = "ssp";
+    private static final String SCHEME_STR = "scheme";
+    private static final String TYPE_STR = "type";
+    private static final String CAT_STR = "cat";
+    private static final String NAME_STR = "name";
+    private static final String ACTION_STR = "action";
 
 	private static final boolean LOG_UN_HANDLED_ITEM = false;
 
@@ -660,6 +678,11 @@ public class ApkManifestParser {
 					component.metaData = new Bundle();
 				}
 				parseMetaData(parser, component.metaData);
+			} else if (TAG_ACTION.equals(tagName)) {
+				if (component.metaData == null) {
+					component.metaData = new Bundle();
+				}
+				parseMetaData(parser, component.metaData);
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
 					Log.w(TAG, "un-handled tag: " + tagName);
@@ -745,7 +768,26 @@ public class ApkManifestParser {
 	private static void parseIntentFilter(XmlResourceParser parser,
 			PackageInfoX info, ActivityInfoX a) throws XmlPullParserException,
 			IOException {
-		IntentInfoX intentInfo = new IntentInfoX();
+		IntentFilterX intentInfo = new IntentFilterX();
+
+		if (false) {
+			intentInfo.readFromXml(parser);
+			
+			if (a.mIntentFilters == null) {
+				a.mIntentFilters = new IntentFilterX[1];
+
+				a.mIntentFilters[0] = intentInfo;
+			} else {
+				int len = a.mIntentFilters.length;
+				IntentFilterX[] as = new IntentFilterX[len + 1];
+				System.arraycopy(a.mIntentFilters, 0, as, 0, len);
+				as[len] = intentInfo;
+
+				a.mIntentFilters = as;
+			}
+			return;
+		}
+		
 		// parse attr
 
 		// parse sub-element
@@ -756,37 +798,90 @@ public class ApkManifestParser {
 			if (type == XmlPullParser.END_TAG || type == XmlPullParser.TEXT) {
 				continue;
 			}
-
+			
+			// copy from IntentFilter
 			String tagName = parser.getName();
+            if (tagName.equals(ACTION_STR)) {
+                String name = parser.getAttributeValue(null, ACTION_STR);
+                if (name != null) {
+                	intentInfo.addAction(name);
+                }
+            } else if (tagName.equals(CAT_STR)) {
+                String name = parser.getAttributeValue(null, NAME_STR);
+                if (name != null) {
+                	intentInfo.addCategory(name);
+                }
+            } else if (tagName.equals(TYPE_STR)) {
+                String name = parser.getAttributeValue(null, NAME_STR);
+                if (name != null) {
+                    try {
+                    	intentInfo.addDataType(name);
+                    } catch (MalformedMimeTypeException e) {
+                    }
+                }
+            } else if (tagName.equals(SCHEME_STR)) {
+                String name = parser.getAttributeValue(null, NAME_STR);
+                if (name != null) {
+                	intentInfo.addDataScheme(name);
+                }
+            } else if (tagName.equals(SSP_STR)) {
+                String ssp = parser.getAttributeValue(null, LITERAL_STR);
+                if (ssp != null) {
+                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_LITERAL);
+                } else if ((ssp=parser.getAttributeValue(null, PREFIX_STR)) != null) {
+                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_PREFIX);
+                } else if ((ssp=parser.getAttributeValue(null, SGLOB_STR)) != null) {
+                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_SIMPLE_GLOB);
+                }
+            } else if (tagName.equals(AUTH_STR)) {
+                String host = parser.getAttributeValue(null, HOST_STR);
+                String port = parser.getAttributeValue(null, PORT_STR);
+                if (host != null) {
+                	intentInfo.addDataAuthority(host, port);
+                }
+            } else if (tagName.equals(PATH_STR)) {
+                String path = parser.getAttributeValue(null, LITERAL_STR);
+                if (path != null) {
+                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_LITERAL);
+                } else if ((path=parser.getAttributeValue(null, PREFIX_STR)) != null) {
+                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_PREFIX);
+                } else if ((path=parser.getAttributeValue(null, SGLOB_STR)) != null) {
+                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_SIMPLE_GLOB);
+                }
+            } else {
+                Log.w("IntentFilter", "Unknown tag parsing IntentFilter: " + tagName);
+            }
 
-			if (TAG_ACTION.equals(tagName)) {
-				parseAction(parser, info, intentInfo);
-			} else if (TAG_CATEGORY.equals(tagName)) {
-				parseCategory(parser, info, intentInfo);
-			} else {
-				if (LOG_UN_HANDLED_ITEM) {
-					Log.w(TAG, "un-handled tag: " + tagName);
-				}
-			}
+//			String tagName = parser.getName();
+//
+//			if (TAG_ACTION.equals(tagName)) {
+//				parseAction(parser, info, intentInfo);
+//			} else if (TAG_CATEGORY.equals(tagName)) {
+//				parseCategory(parser, info, intentInfo);
+//			} else {
+//				if (LOG_UN_HANDLED_ITEM) {
+//					Log.w(TAG, "un-handled tag: " + tagName);
+//				}
+//			}
 		}
 
-		if (a.mIntents == null) {
-			a.mIntents = new IntentInfoX[1];
+		if (a.mIntentFilters == null) {
+			a.mIntentFilters = new IntentFilterX[1];
 
-			a.mIntents[0] = intentInfo;
+			a.mIntentFilters[0] = intentInfo;
 		} else {
-			int len = a.mIntents.length;
-			IntentInfoX[] as = new IntentInfoX[len + 1];
-			System.arraycopy(a.mIntents, 0, as, 0, len);
+			int len = a.mIntentFilters.length;
+			IntentFilterX[] as = new IntentFilterX[len + 1];
+			System.arraycopy(a.mIntentFilters, 0, as, 0, len);
 			as[len] = intentInfo;
 
-			a.mIntents = as;
+			a.mIntentFilters = as;
 		}
 
 	}
 
 	private static void parseCategory(XmlResourceParser parser,
-			PackageInfoX info, IntentInfoX intentInfo) {
+			PackageInfoX info, IntentFilterX intentInfo) {
 		// parse attr
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
@@ -804,7 +899,7 @@ public class ApkManifestParser {
 	}
 
 	private static void parseAction(XmlResourceParser parser,
-			PackageInfoX info, IntentInfoX intentInfo) {
+			PackageInfoX info, IntentFilterX intentInfo) {
 		// parse attr
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
@@ -824,7 +919,7 @@ public class ApkManifestParser {
 	private static void dumpParser(XmlResourceParser parser) {
 		int depth = 0;
 		int eventType;
-		Log.d(TAG, makePrefix(depth) + "" + "orignal manifest");
+		Log.d(TAG, makePrefix(depth) + "" + "orignal manifest:");
 		try {
 			eventType = parser.getEventType();
 			while (eventType != XmlPullParser.END_DOCUMENT) {

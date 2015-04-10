@@ -150,7 +150,6 @@ public class PackageInfoX extends PackageInfo {
 		public boolean mAllowTaskReparenting;
 
 		public void dump(int level, int flag) {
-			level++;
 			String prefix = ApkManifestParser.makePrefix(level);
 			Log.d(ApkManifestParser.TAG, prefix + "packageName: " + packageName);
 			Log.d(ApkManifestParser.TAG, prefix + "theme      : " + theme);
@@ -169,7 +168,7 @@ public class PackageInfoX extends PackageInfo {
 
 	public static class ActivityInfoX extends ActivityInfo implements
 			Parcelable {
-		public PackageInfoX.IntentInfoX[] mIntents;
+		public PackageInfoX.IntentFilterX[] mIntentFilters;
 		public PackageInfoX mPackageInfo;
 
 		public int describeContents() {
@@ -185,6 +184,10 @@ public class PackageInfoX extends PackageInfo {
 			Log.d(ApkManifestParser.TAG, prefix + "theme: " + theme);
 
 			PackageInfoX.dumpMetaData(level + 1, metaData, flag);
+			
+			if (mIntentFilters != null && mIntentFilters.length > 0) {
+				
+			}
 		}
 
 		public void dump() {
@@ -197,7 +200,7 @@ public class PackageInfoX extends PackageInfo {
 
 		public void writeToParcel(Parcel out, int flags) {
 			super.writeToParcel(out, flags);
-			out.writeParcelableArray(mIntents, flags);
+			out.writeParcelableArray(mIntentFilters, flags);
 		}
 
 		public static final Parcelable.Creator<PackageInfoX.ActivityInfoX> CREATOR = new Parcelable.Creator<PackageInfoX.ActivityInfoX>() {
@@ -244,8 +247,32 @@ public class PackageInfoX extends PackageInfo {
 
 	}
 
-	public static class IntentInfoX extends IntentFilter {
+	public static class IntentFilterX extends IntentFilter {
 		public String[] mActions;
+		
+		public void dump(int level, int flag){
+			if (shouldLog(flag))
+				Log.d(ApkManifestParser.TAG,
+						ApkManifestParser.makePrefix(level) + "intentfilter: ");
+			String prefix = ApkManifestParser.makePrefix(level + 1);
+			if (shouldLog(flag)) {
+				int count = countActions();
+				for (int i = 0; i < count ; i++) {
+					Log.d(ApkManifestParser.TAG, prefix + "action     : "
+							+ getAction(i));
+				}
+				count = countCategories();
+				for (int i = 0; i < count ; i++) {
+					Log.d(ApkManifestParser.TAG, prefix + "category   : "
+							+ getCategory(i));
+				}
+				// TODO
+			}
+		}
+
+		private boolean shouldLog(int flag) {
+			return (flag & DUMP_ACTIVITY) != 0;
+		}
 	}
 
 	public static class UsesSdkX {
@@ -321,5 +348,9 @@ public class PackageInfoX extends PackageInfo {
 			return hasFlag(flag, DUMP_PERMISSION);
 		}
 
+	}
+	
+	public static class ActionX {
+		
 	}
 }
