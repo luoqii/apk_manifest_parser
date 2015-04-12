@@ -800,69 +800,69 @@ public class ApkManifestParser {
 			}
 			
 			// copy from IntentFilter
-			String tagName = parser.getName();
-            if (tagName.equals(ACTION_STR)) {
-                String name = parser.getAttributeValue(null, ACTION_STR);
-                if (name != null) {
-                	intentInfo.addAction(name);
-                }
-            } else if (tagName.equals(CAT_STR)) {
-                String name = parser.getAttributeValue(null, NAME_STR);
-                if (name != null) {
-                	intentInfo.addCategory(name);
-                }
-            } else if (tagName.equals(TYPE_STR)) {
-                String name = parser.getAttributeValue(null, NAME_STR);
-                if (name != null) {
-                    try {
-                    	intentInfo.addDataType(name);
-                    } catch (MalformedMimeTypeException e) {
-                    }
-                }
-            } else if (tagName.equals(SCHEME_STR)) {
-                String name = parser.getAttributeValue(null, NAME_STR);
-                if (name != null) {
-                	intentInfo.addDataScheme(name);
-                }
-            } else if (tagName.equals(SSP_STR)) {
-                String ssp = parser.getAttributeValue(null, LITERAL_STR);
-                if (ssp != null) {
-                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_LITERAL);
-                } else if ((ssp=parser.getAttributeValue(null, PREFIX_STR)) != null) {
-                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_PREFIX);
-                } else if ((ssp=parser.getAttributeValue(null, SGLOB_STR)) != null) {
-                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_SIMPLE_GLOB);
-                }
-            } else if (tagName.equals(AUTH_STR)) {
-                String host = parser.getAttributeValue(null, HOST_STR);
-                String port = parser.getAttributeValue(null, PORT_STR);
-                if (host != null) {
-                	intentInfo.addDataAuthority(host, port);
-                }
-            } else if (tagName.equals(PATH_STR)) {
-                String path = parser.getAttributeValue(null, LITERAL_STR);
-                if (path != null) {
-                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_LITERAL);
-                } else if ((path=parser.getAttributeValue(null, PREFIX_STR)) != null) {
-                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_PREFIX);
-                } else if ((path=parser.getAttributeValue(null, SGLOB_STR)) != null) {
-                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_SIMPLE_GLOB);
-                }
-            } else {
-                Log.w("IntentFilter", "Unknown tag parsing IntentFilter: " + tagName);
-            }
-
 //			String tagName = parser.getName();
-//
-//			if (TAG_ACTION.equals(tagName)) {
-//				parseAction(parser, info, intentInfo);
-//			} else if (TAG_CATEGORY.equals(tagName)) {
-//				parseCategory(parser, info, intentInfo);
-//			} else {
-//				if (LOG_UN_HANDLED_ITEM) {
-//					Log.w(TAG, "un-handled tag: " + tagName);
-//				}
-//			}
+//            if (tagName.equals(ACTION_STR)) {
+//                String name = parser.getAttributeValue(null, ACTION_STR);
+//                if (name != null) {
+//                	intentInfo.addAction(name);
+//                }
+//            } else if (tagName.equals(CAT_STR)) {
+//                String name = parser.getAttributeValue(null, NAME_STR);
+//                if (name != null) {
+//                	intentInfo.addCategory(name);
+//                }
+//            } else if (tagName.equals(TYPE_STR)) {
+//                String name = parser.getAttributeValue(null, NAME_STR);
+//                if (name != null) {
+//                    try {
+//                    	intentInfo.addDataType(name);
+//                    } catch (MalformedMimeTypeException e) {
+//                    }
+//                }
+//            } else if (tagName.equals(SCHEME_STR)) {
+//                String name = parser.getAttributeValue(null, NAME_STR);
+//                if (name != null) {
+//                	intentInfo.addDataScheme(name);
+//                }
+//            } else if (tagName.equals(SSP_STR)) {
+//                String ssp = parser.getAttributeValue(null, LITERAL_STR);
+//                if (ssp != null) {
+//                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_LITERAL);
+//                } else if ((ssp=parser.getAttributeValue(null, PREFIX_STR)) != null) {
+//                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_PREFIX);
+//                } else if ((ssp=parser.getAttributeValue(null, SGLOB_STR)) != null) {
+//                	intentInfo.addDataSchemeSpecificPart(ssp, PatternMatcher.PATTERN_SIMPLE_GLOB);
+//                }
+//            } else if (tagName.equals(AUTH_STR)) {
+//                String host = parser.getAttributeValue(null, HOST_STR);
+//                String port = parser.getAttributeValue(null, PORT_STR);
+//                if (host != null) {
+//                	intentInfo.addDataAuthority(host, port);
+//                }
+//            } else if (tagName.equals(PATH_STR)) {
+//                String path = parser.getAttributeValue(null, LITERAL_STR);
+//                if (path != null) {
+//                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_LITERAL);
+//                } else if ((path=parser.getAttributeValue(null, PREFIX_STR)) != null) {
+//                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_PREFIX);
+//                } else if ((path=parser.getAttributeValue(null, SGLOB_STR)) != null) {
+//                	intentInfo.addDataPath(path, PatternMatcher.PATTERN_SIMPLE_GLOB);
+//                }
+//            } else {
+//                Log.w("IntentFilter", "Unknown tag parsing IntentFilter: " + tagName);
+//            }
+
+			String tagName = parser.getName();
+
+			if (TAG_ACTION.equals(tagName)) {
+				parseAction(parser, info, intentInfo);
+			} else if (TAG_CATEGORY.equals(tagName)) {
+				parseCategory(parser, info, intentInfo);
+			} else {
+				if (LOG_UN_HANDLED_ITEM) {
+					Log.w(TAG, "un-handled tag: " + tagName);
+				}
+			}
 		}
 
 		if (a.mIntentFilters == null) {

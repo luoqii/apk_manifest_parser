@@ -248,7 +248,6 @@ public class PackageInfoX extends PackageInfo {
 	}
 
 	public static class IntentFilterX extends IntentFilter {
-		public String[] mActions;
 		
 		public void dump(int level, int flag){
 			if (shouldLog(flag))
