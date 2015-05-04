@@ -12,6 +12,7 @@ import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -22,6 +23,7 @@ import android.util.Log;
  *
  */
 public class PackageInfoX extends PackageInfo {
+	private static final String TAG = ApkManifestParser.TAG;
 	public static final int DUMP_APPLICATION = 1 << 0;
 	public static final int DUMP_ACTIVITY = 1 << 1 | DUMP_APPLICATION;
 	public static final int DUMP_USES_SDK = 1 << 2;
@@ -76,6 +78,15 @@ public class PackageInfoX extends PackageInfo {
 		Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level)
 				+ "parsed manifest:");
 		level = level + 1;
+		String prefix = ApkManifestParser.makePrefix(level);
+		Log.d(ApkManifestParser.TAG, prefix + "versionCode   : "+ versionCode);
+		Log.d(ApkManifestParser.TAG, prefix + "versionCode   : "+ versionName);
+		if (!TextUtils.isEmpty(sharedUserId)){
+			Log.d(ApkManifestParser.TAG, prefix + "sharedUserId   : "+ sharedUserId);
+		}
+		if (sharedUserLabel > 0){
+			Log.d(ApkManifestParser.TAG, prefix + "sharedUserLabel: "+ sharedUserLabel);
+		}
 		if (mUsesSdk != null) {
 			mUsesSdk.dump(level, flag);
 		}
@@ -85,7 +96,7 @@ public class PackageInfoX extends PackageInfo {
 				Log.d(ApkManifestParser.TAG,
 						ApkManifestParser.makePrefix(level) + "permissions: ");
 				for (PermissionInfo p : permissions) {
-					String prefix = ApkManifestParser.makePrefix(level + 1);
+					prefix = ApkManifestParser.makePrefix(level + 1);
 					Log.d(ApkManifestParser.TAG, prefix + "permission;");
 					prefix = ApkManifestParser.makePrefix(level + 2);
 					Log.d(ApkManifestParser.TAG, prefix + "name           : "
@@ -104,7 +115,7 @@ public class PackageInfoX extends PackageInfo {
 						ApkManifestParser.makePrefix(level)
 								+ "permissionGroup: ");
 				for (PermissionGroupInfo p : mPermissionGroups) {
-					String prefix = ApkManifestParser.makePrefix(level + 1);
+					prefix = ApkManifestParser.makePrefix(level + 1);
 					Log.d(ApkManifestParser.TAG, prefix + "permissiongroup: "
 							+ p.name);
 					prefix = ApkManifestParser.makePrefix(level + 2);

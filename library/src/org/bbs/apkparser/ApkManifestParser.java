@@ -262,7 +262,7 @@ public class ApkManifestParser {
 			if (ATTR_PACKAGE.equals(attName)) {
 				info.packageName = attValue;
 			} else if (ATTR_VERSION_NAME.equals(attName)) {
-				info.versionName = attName;
+				info.versionName = attValue;
 			} else if (ATTR_VERSION_CODE.equals(attName)) {
 				info.versionCode = Integer.parseInt(attValue);
 			} else if (ATTR_SHARED_USER_ID.equals(attName)) {
