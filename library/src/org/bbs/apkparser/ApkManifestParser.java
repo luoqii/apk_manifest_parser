@@ -36,18 +36,18 @@ public class ApkManifestParser {
 	static final String TAG = ApkManifestParser.class.getSimpleName();
 	private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
 
-	private static final String TAG_CATEGORY = "category";
-	private static final String TAG_INTENT_FILTER = "intent-filter";
-	private static final String TAG_ACTION = "action";
-	private static final String TAG_ACTIVITY = "activity";
-	private static final String TAG_APPLICATION = "application";
-	private static final String TAG_MANIFEST = "manifest";
-	private static final String TAG_USES_SDK = "uses-sdk";
-	private static final String TAG_META_DATA = "meta-data";
-	private static final String TAG_SERVICE = "service";
-	private static final String TAG_USES_PERMISSION = "uses-permission";
-	private static final String TAG_PERMISSION = "permission";
-	private static final String TAG_PERMISSION_TREE = "permission-tree";
+	private static final String TAG_CATEGORY         = "category";
+	private static final String TAG_INTENT_FILTER    = "intent-filter";
+	private static final String TAG_ACTION           = "action";
+	private static final String TAG_ACTIVITY         = "activity";
+	private static final String TAG_APPLICATION      = "application";
+	private static final String TAG_MANIFEST         = "manifest";
+	private static final String TAG_USES_SDK         = "uses-sdk";
+	private static final String TAG_META_DATA        = "meta-data";
+	private static final String TAG_SERVICE          = "service";
+	private static final String TAG_USES_PERMISSION  = "uses-permission";
+	private static final String TAG_PERMISSION       = "permission";
+	private static final String TAG_PERMISSION_TREE  = "permission-tree";
 	private static final String TAG_PERMISSION_GROUP = "permission-group";
 
 	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
@@ -188,6 +188,7 @@ public class ApkManifestParser {
 				ActivityInfoX comX = (ActivityInfoX) a;
 				comX.mPackageInfo = info;
 				if (comX.theme == 0 && appInfo.theme > 0) {
+					Log.i(TAG, "use app's theme : " + appInfo.theme);
 					comX.theme = appInfo.theme;
 				}
 
@@ -366,7 +367,7 @@ public class ApkManifestParser {
 			if (ATTR_MAX_SDK_VERSION.equals(attName)) {
 				perm.mMaxSdkVersion = Integer.parseInt(attValue);
 			} else if (ATTR_NAME.equals(attName)) {
-				perm.mName = attValue;
+				perm.name = attValue;
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
 					Log.w(TAG, "un-handled att: " + attName + "=" + attValue);

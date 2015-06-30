@@ -6,6 +6,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageItemInfo;
 import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 import android.content.pm.ServiceInfo;
@@ -16,8 +17,9 @@ import android.text.TextUtils;
 import android.util.Log;
 
 /**
- * all new-added member MUST has a 'm" prefix; all new-added class MUST has a
- * 'X' suffix.
+ * <pre>
+ * all new-added member MUST has a 'm" prefix; 
+ * all new-added class  MUST has a 'X' suffix.
  * 
  * @author bysong
  *
@@ -25,22 +27,22 @@ import android.util.Log;
 public class PackageInfoX extends PackageInfo {
 	private static final String TAG = ApkManifestParser.TAG;
 	public static final int DUMP_APPLICATION = 1 << 0;
-	public static final int DUMP_ACTIVITY = 1 << 1 | DUMP_APPLICATION;
-	public static final int DUMP_USES_SDK = 1 << 2;
-	public static final int DUMP_SERVICE = 1 << 3 | DUMP_APPLICATION;
-	public static final int DUMP_PERMISSION = 1 << 4;
-	public static final int DUMP_META_DATA = 1 << 5 | DUMP_APPLICATION
+	public static final int DUMP_ACTIVITY    = 1 << 1 | DUMP_APPLICATION;
+	public static final int DUMP_USES_SDK    = 1 << 2;
+	public static final int DUMP_SERVICE     = 1 << 3 | DUMP_APPLICATION;
+	public static final int DUMP_PERMISSION  = 1 << 4;
+	public static final int DUMP_META_DATA   = 1 << 5 | DUMP_APPLICATION
 			| DUMP_SERVICE | DUMP_ACTIVITY;
 
 	public static final int DUMP_ALL = 0xEFFF;
 	public static final int FLAG_DUMP = DUMP_ALL;
 
 	public PackageInfoX.UsesSdkX mUsesSdk;
-	public UsesPermissionX[] mUsedPermissions;
+	public UsesPermissionX[]     mUsedPermissions;
 	public PermissionGroupInfo[] mPermissionGroups;
-	public PermissionTreeX[] mPermissionTrees;
+	public PermissionTreeX[]     mPermissionTrees;
 
-	// evaluate by application.
+	// evaluate by application, not parser.
 	public String mLibPath;
 
 	public static boolean hasFlag(int flag, int mask) {
@@ -123,7 +125,7 @@ public class PackageInfoX extends PackageInfo {
 							+ p.name);
 					Log.d(ApkManifestParser.TAG, prefix + "descriptionRes : "
 							+ p.descriptionRes);
-					Log.d(ApkManifestParser.TAG, prefix + "descriptionRes : "
+					Log.d(ApkManifestParser.TAG, prefix + "labelRes       : "
 							+ p.labelRes);
 				}
 			}
@@ -295,15 +297,14 @@ public class PackageInfoX extends PackageInfo {
 				Log.d(ApkManifestParser.TAG,
 						ApkManifestParser.makePrefix(level) + "mUseSdk: ");
 			String prefix = ApkManifestParser.makePrefix(level + 1);
-			if (shouldLog(flag))
+			if (shouldLog(flag)) {
 				Log.d(ApkManifestParser.TAG, prefix + "mMinSdkVersion     : "
 						+ mMinSdkVersion);
-			if (shouldLog(flag))
 				Log.d(ApkManifestParser.TAG, prefix + "mTargetSdkVersion  : "
 						+ mTargetSdkVersion);
-			if (shouldLog(flag))
 				Log.d(ApkManifestParser.TAG, prefix + "mMaxSdkVersion     : "
 						+ mMaxSdkVersion);
+			}
 		}
 
 		public static boolean shouldLog(int flag) {
@@ -311,8 +312,8 @@ public class PackageInfoX extends PackageInfo {
 		}
 	}
 
-	public static class UsesPermissionX {
-		public String mName;
+	public static class UsesPermissionX extends PackageItemInfo {
+//		public String mName;
 		public int mMaxSdkVersion;
 
 		public void dump(int level, int flag) {
@@ -321,12 +322,12 @@ public class PackageInfoX extends PackageInfo {
 						ApkManifestParser.makePrefix(level)
 								+ "mUsePermission: ");
 			String prefix = ApkManifestParser.makePrefix(level + 1);
-			if (shouldLog(flag))
+			if (shouldLog(flag)) {
 				Log.d(ApkManifestParser.TAG, prefix + "mName          : "
-						+ mName);
-			if (shouldLog(flag))
+						+ name);
 				Log.d(ApkManifestParser.TAG, prefix + "mMaxSdkVersion : "
 						+ mMaxSdkVersion);
+			}
 		}
 
 		public void dump() {
@@ -338,20 +339,19 @@ public class PackageInfoX extends PackageInfo {
 		}
 	}
 
-	public static class PermissionTreeX {
+	public static class PermissionTreeX extends PackageItemInfo {
 		public String mName;
 		public int mLabelRes;
 
 		public void dump(int level, int flag) {
 			if (shouldLog(flag))
-				Log.d(ApkManifestParser.TAG,
-						ApkManifestParser.makePrefix(level)
-								+ "mUsePermission: ");
+				Log.d(ApkManifestParser.TAG, ApkManifestParser.makePrefix(level)
+												+ "mUsePermission: ");
 			String prefix = ApkManifestParser.makePrefix(level + 1);
-			if (shouldLog(flag))
+			if (shouldLog(flag)) {
 				Log.d(ApkManifestParser.TAG, prefix + "mName  : " + mName);
-			if (shouldLog(flag))
 				Log.d(ApkManifestParser.TAG, prefix + "mLabel : " + mLabelRes);
+			}
 		}
 
 		public static boolean shouldLog(int flag) {
