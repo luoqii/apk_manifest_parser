@@ -26,6 +26,7 @@ import android.content.pm.PermissionInfo;
 import android.content.pm.ServiceInfo;
 import android.content.res.AssetManager;
 import android.content.res.XmlResourceParser;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PatternMatcher;
 import android.text.TextUtils;
@@ -601,9 +602,9 @@ public class ApkManifestParser {
 				}
 			} else if (ATTR_ICON.equals(attName)) {
 				info.icon = toResId(attValue);
-			} else if (ATTR_LOGO.equals(attName)) {
+			} else if (ATTR_LOGO.equals(attName) && afterApiLevel(9)) {
 				info.logo = toResId(attValue);
-			} else if (ATTR_BANNER.equals(attName)) {
+			} else if (ATTR_BANNER.equals(attName) && afterApiLevel(20)) {
 				info.logo = toResId(attValue);
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
@@ -611,6 +612,10 @@ public class ApkManifestParser {
 				}
 			}
 		}
+	}
+	
+	static boolean afterApiLevel(int level){
+		return Build.VERSION.SDK_INT >= level;
 	}
 
 	private static void parseMetaData(XmlResourceParser parser, Bundle metaData) {
