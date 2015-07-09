@@ -1,9 +1,17 @@
 apply plugin: 'android'
 
+repositories {
+    //mavenCentral()
+    jcenter()
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':library')
-    compile project(':appcompat')
+//    compile project(':appcompat')
+
+    // https://github.com/bmelnychuk/AndroidTreeView
+    compile 'com.github.bmelnychuk:atv:1.2.+'
 }
 
 android {
