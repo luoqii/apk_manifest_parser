@@ -17,6 +17,8 @@ import android.view.View;
 import com.unnamed.b.atv.model.TreeNode;
 import com.unnamed.b.atv.view.AndroidTreeView;
 
+import java.util.Iterator;
+
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
@@ -65,29 +67,37 @@ public class MainActivity extends ActionBarActivity {
 
 	View createTreeView(PackageInfoX info){
 		TreeNode root = TreeNode.root();
-		TreeNode pgkNode = new TreeNode("package");
-		TreeNode useSdk = new TreeNode("useSdk");
-		useSdk.addChild(new TreeNode("max: " + info.mUsesSdk.mMaxSdkVersion));
-		useSdk.addChild(new TreeNode("min: " + info.mUsesSdk.mMinSdkVersion));
-		useSdk.addChild(new TreeNode("target: " + info.mUsesSdk.mTargetSdkVersion));
-		pgkNode.addChild(useSdk);
+		TreeNode manifestNode = new TreeNode("manifest");
+
+		TreeNode useSdk = new TreeNode("mUsesSdk");
+		useSdk.addChild(new TreeNode("mMaxSdkVersion: " + info.mUsesSdk.mMaxSdkVersion));
+		useSdk.addChild(new TreeNode("mMinSdkVersion: " + info.mUsesSdk.mMinSdkVersion));
+		useSdk.addChild(new TreeNode("mTargetSdkVersion: " + info.mUsesSdk.mTargetSdkVersion));
+		manifestNode.addChild(useSdk);
 		if (info.mUsedPermissions != null && info.mUsedPermissions.length > 0) {
-			TreeNode useP = new TreeNode("use-permission");
+			TreeNode useP = new TreeNode("mUsedPermissions");
 			for (PackageInfoX.UsesPermissionX p : info.mUsedPermissions){
 				TreeNode pN = new TreeNode(p.name);
 
 				useP.addChild(pN);
 			}
-			pgkNode.addChild(useP);
+			manifestNode.addChild(useP);
 		}
 
+		TreeNode appNode = new TreeNode("applicationInfo");
+		appNode.addChild(new TreeNode("name: " + info.applicationInfo.name));
+		appNode.addChild(new TreeNode("className: " + info.applicationInfo.className));
+		appNode.addChild(new TreeNode("packageName: " + info.applicationInfo.packageName));
+		createMetaData(info.applicationInfo.metaData, appNode);
+		manifestNode.addChild(appNode);
+
 		if (info.activities != null && info.activities.length > 0){
-			TreeNode actRoot = new TreeNode("activity");
+			TreeNode actRoot = new TreeNode("activities");
 			for (ActivityInfo a : info.activities){
 				PackageInfoX.ActivityInfoX aX = (PackageInfoX.ActivityInfoX) a;
 				TreeNode act = createActivityNode(aX);
 				if (aX.mIntentFilters != null && aX.mIntentFilters.length > 0){
-					TreeNode filtersN = new TreeNode("intentfilters");
+					TreeNode filtersN = new TreeNode("mIntentFilters");
 					for (PackageInfoX.IntentFilterX f: aX.mIntentFilters){
 						TreeNode filter = new TreeNode("intentfilter");
 						int count = f.countActions();
@@ -106,17 +116,38 @@ public class MainActivity extends ActionBarActivity {
 
 					act.addChild(filtersN);
 				}
+				createMetaData(aX.metaData, act);
 				actRoot.addChild(act);
 			}
 
-			pgkNode.addChild(actRoot);
+			appNode.addChild(actRoot);
 		}
 
-		root.addChild(pgkNode);
+		root.addChild(manifestNode);
 
 		AndroidTreeView v = new AndroidTreeView(this, root);
 		v.setDefaultContainerStyle(R.style.TreeNodeStyleCustom);
 		return v.getView();
+	}
+
+	private void createMetaData(Bundle metaData, TreeNode root) {
+		if (metaData != null){
+			TreeNode nodes = new TreeNode("meta-datas");
+			Iterator<String> it = metaData.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				String value = "";
+				value = metaData.getString(key);
+				if (null == value) {
+					value = "@" + metaData.getInt(key) + "";
+				}
+
+				TreeNode node = new TreeNode("meta-data");
+				node.addChildren(new TreeNode("key: " + key), new TreeNode("value: " + value));
+				nodes.addChild(node);
+			}
+			root.addChild(nodes);
+		}
 	}
 
 	private TreeNode createActivityNode(PackageInfoX.ActivityInfoX aX) {
