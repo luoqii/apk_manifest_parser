@@ -8,16 +8,29 @@
         android:minSdkVersion="11"
         android:targetSdkVersion="21" />
 
+    <android:uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18" />
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <android:uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        <meta-data
+            android:name="app_meta_data_1"
+            android:value="app_meta_data_1_value" />
+        <meta-data
+            android:name="app_meta_data_2"
+            android:value="app_meta_data_2_value" />
+        <meta-data
+            android:name="app_meta_data_3"
+            android:resource="@string/app_meta_data_3_resource" />
 
-
-        <meta-data android:name="app_meta_data_1" android:value="app_meta_data_1_value" />
-        <meta-data android:name="app_meta_data_2" android:value="app_meta_data_2_value" />
-        <meta-data android:name="app_meta_data_3" android:resource="@string/app_meta_data_3_resource" />
         <activity
             android:name="org.bbs.demo.apkparser.MainActivity"
             android:label="@string/app_name" >
@@ -27,10 +40,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-
-            <meta-data android:name="activity_meta_data_1" android:value="activity_meta_data_1_value" />
-            <meta-data android:name="activity_meta_data_2" android:value="activity_meta_data_2_value" />
-            <meta-data android:name="activity_meta_data_3" android:resource="@string/activity_meta_data_3_resource" />
+            <meta-data
+                android:name="activity_meta_data_1"
+                android:value="activity_meta_data_1_value" />
+            <meta-data
+                android:name="activity_meta_data_2"
+                android:value="activity_meta_data_2_value" />
+            <meta-data
+                android:name="activity_meta_data_3"
+                android:resource="@string/activity_meta_data_3_resource" />
+        </activity>
+        <activity
+            android:name="org.bbs.demo.apkparser.AppPicker"
+            android:label="@string/title_activity_app_picker" >
         </activity>
     </application>
 

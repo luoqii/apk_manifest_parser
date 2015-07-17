@@ -1,11 +1,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="org.bbs.apkparser.MainActivity" >
+    tools:context="org.bbs.apkparser.MainActivity">
 
+    <item
+        android:id="@+id/action_pick_app"
+        android:orderInCategory="100"
+        android:title="other app" />
+    <item
+        android:id="@+id/action_pick_apk"
+        android:orderInCategory="100"
+        android:title="other apk" />
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:title="@string/action_settings"/>
+        android:title="@string/action_settings" />
 
 </menu>

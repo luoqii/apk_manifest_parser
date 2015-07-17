@@ -459,9 +459,9 @@ public class ApkManifestParser {
 
 			info.mPermissionGroups[0] = perm;
 		} else {
-			int len = info.permissions.length;
+			int len = info.mPermissionGroups.length;
 			PermissionGroupInfo[] permissions = new PermissionGroupInfo[len + 1];
-			System.arraycopy(info.permissions, 0, permissions, 0, len);
+			System.arraycopy(info.mPermissionGroups, 0, permissions, 0, len);
 			permissions[len] = perm;
 
 			info.mPermissionGroups = permissions;

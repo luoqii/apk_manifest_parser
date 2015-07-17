@@ -4,38 +4,63 @@ import org.bbs.apkparser.ApkManifestParser;
 import org.bbs.apkparser.PackageInfoX;
 import org.bbs.apkparser.demo.R;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import com.unnamed.b.atv.model.TreeNode;
 import com.unnamed.b.atv.view.AndroidTreeView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
+	private static final int REQUEST_APP = 0;
+	private static final int REQUEST_APK = 1;
+	private FrameLayout mTree;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		mTree = (FrameLayout)findViewById(R.id.tree);
 		
 		String apkFile = getApplicationInfo().publicSourceDir;
+		parseApk(apkFile, false);
+	}
+
+	private void parseApk(String apkFile, boolean updatePackageName) {
+//		apkFile = "/storage/emulated/legacy/Download/ESdanganliulanqi_229.apk"
 		PackageInfoX info = ApkManifestParser.parseAPk(this, apkFile, true, true);
+		Log.d(TAG, "apkFile: " + apkFile);
 		info.dump(PackageInfoX.DUMP_ALL);
-		setContentView(createTreeView(info));
-		
+		mTree.removeAllViews();
+		mTree.addView(createTreeView(info));
+		if (updatePackageName){
+			((TextView)findViewById(R.id.desc)).setText("app: " + info.packageName);
+		}
+
 		int flags = PackageManager.GET_ACTIVITIES|PackageManager.GET_CONFIGURATIONS
 				|PackageManager.GET_DISABLED_COMPONENTS| PackageManager.GET_DISABLED_UNTIL_USED_COMPONENTS
-				|PackageManager.GET_GIDS| PackageManager.GET_INSTRUMENTATION 
+				|PackageManager.GET_GIDS| PackageManager.GET_INSTRUMENTATION
 				|PackageManager.GET_INTENT_FILTERS | PackageManager.GET_META_DATA
 				|PackageManager.GET_PERMISSIONS | PackageManager.GET_PROVIDERS
 				|PackageManager.GET_PROVIDERS | PackageManager.GET_RECEIVERS
@@ -43,6 +68,7 @@ public class MainActivity extends ActionBarActivity {
 				|PackageManager.GET_SHARED_LIBRARY_FILES| PackageManager.GET_SERVICES
 				|PackageManager.GET_UNINSTALLED_PACKAGES | PackageManager.GET_URI_PERMISSION_PATTERNS;
 		PackageInfo pinfo = getPackageManager().getPackageArchiveInfo(apkFile, flags);
+
 		Log.d(TAG, "pinfo: " + pinfo);
 	}
 
@@ -62,7 +88,39 @@ public class MainActivity extends ActionBarActivity {
 		if (id == R.id.action_settings) {
 			return true;
 		}
+		if (id == R.id.action_pick_app){
+			Intent pick = new Intent(this, AppPicker.class);
+			startActivityForResult(pick, REQUEST_APP);
+			return  true;
+		}
+		if (id == R.id.action_pick_apk){
+			Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+			pick.setType("*/*");
+			startActivityForResult(pick, REQUEST_APK);
+			return true;
+		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (REQUEST_APP == requestCode && RESULT_OK == resultCode){
+			PackageInfo info = data.getParcelableExtra("app");
+			((TextView)findViewById(R.id.desc)).setText("app: " + info.packageName);
+			parseApk(info.applicationInfo.publicSourceDir, false);
+		}
+
+		if (REQUEST_APK == requestCode && RESULT_OK == resultCode){
+			Uri uri = data.getData();
+			Log.d(TAG, "uri: " + uri);
+			if ("file".equals(uri.getScheme())){
+				String apkPath = uri.getPath();
+				parseApk(apkPath, true);
+//				parseApk(uri.toString(), true);
+			}
+		}
 	}
 
 	View createTreeView(PackageInfoX info){
@@ -160,6 +218,5 @@ public class MainActivity extends ActionBarActivity {
 
 		return act;
 	}
-
 
 }

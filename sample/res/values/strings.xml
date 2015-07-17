@@ -7,5 +7,6 @@
 
     <string name="app_meta_data_3_resource">app_meta_data_3_resource</string>
     <string name="activity_meta_data_3_resource">activity_meta_data_3_resource</string>
+    <string name="title_activity_app_picker">AppPicker</string>
 
 </resources>
