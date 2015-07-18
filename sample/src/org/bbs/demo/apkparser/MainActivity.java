@@ -6,11 +6,15 @@ import org.bbs.apkparser.demo.R;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.ComponentInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageItemInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,12 +25,6 @@ import android.widget.TextView;
 import com.unnamed.b.atv.model.TreeNode;
 import com.unnamed.b.atv.view.AndroidTreeView;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
 
 public class MainActivity extends ActionBarActivity {
@@ -142,11 +140,8 @@ public class MainActivity extends ActionBarActivity {
 			manifestNode.addChild(useP);
 		}
 
-		TreeNode appNode = new TreeNode("applicationInfo");
-		appNode.addChild(new TreeNode("name: " + info.applicationInfo.name));
-		appNode.addChild(new TreeNode("className: " + info.applicationInfo.className));
-		appNode.addChild(new TreeNode("packageName: " + info.applicationInfo.packageName));
-		createMetaData(info.applicationInfo.metaData, appNode);
+		TreeNode appNode = createApplicationNode(info);
+		parseMetaDataAndAdd(info.applicationInfo.metaData, appNode);
 		manifestNode.addChild(appNode);
 
 		if (info.activities != null && info.activities.length > 0){
@@ -174,7 +169,7 @@ public class MainActivity extends ActionBarActivity {
 
 					act.addChild(filtersN);
 				}
-				createMetaData(aX.metaData, act);
+				parseMetaDataAndAdd(aX.metaData, act);
 				actRoot.addChild(act);
 			}
 
@@ -188,7 +183,121 @@ public class MainActivity extends ActionBarActivity {
 		return v.getView();
 	}
 
-	private void createMetaData(Bundle metaData, TreeNode root) {
+	private TreeNode createApplicationNode(PackageInfoX info) {
+		TreeNode appNode = new TreeNode("applicationInfo");
+		appNode.addChild(new TreeNode("name: " + info.applicationInfo.name));
+		appNode.addChild(new TreeNode("className: " + info.applicationInfo.className));
+
+		// packageinfo
+//		if (hasSet(info.baseRevisionCode)){
+//
+//		}
+		if (hasSet(info.firstInstallTime)){
+			appNode.addChild(new TreeNode("firstInstallTime: " + info.firstInstallTime));
+		}
+		if (hasSet(info.installLocation)){
+			appNode.addChild(new TreeNode("installLocation: " + info.installLocation));
+		}
+		if (hasSet(info.lastUpdateTime)){
+			appNode.addChild(new TreeNode("lastUpdateTime: " + info.lastUpdateTime));
+		}
+		if (hasSet(info.packageName)){
+			appNode.addChild(new TreeNode("packageName: " + info.packageName));
+		}
+		if (hasSet(info.sharedUserLabel)){
+			appNode.addChild(new TreeNode("sharedUserLabel: " + info.sharedUserLabel));
+		}
+		if (hasSet(info.versionCode)){
+			appNode.addChild(new TreeNode("versionCode: " + info.versionCode));
+		}
+		if (hasSet(info.packageName)){
+			appNode.addChild(new TreeNode("packageName: " + info.packageName));
+		}
+		if (hasSet(info.packageName)){
+			appNode.addChild(new TreeNode("packageName: " + info.packageName));
+		}
+		if (hasSet(info.versionName )){
+			appNode.addChild(new TreeNode("versionName : " + info.versionName ));
+		}
+
+		// application info
+		ApplicationInfo aInfo = info.applicationInfo;
+		if (hasSet(aInfo.backupAgentName )){
+			appNode.addChild(new TreeNode("backupAgentName : " + aInfo.backupAgentName ));
+		}
+		if (hasSet(aInfo.className )){
+			appNode.addChild(new TreeNode("className : " + aInfo.className ));
+		}
+		if (hasSet(aInfo.compatibleWidthLimitDp )){
+			appNode.addChild(new TreeNode("compatibleWidthLimitDp : " + aInfo.compatibleWidthLimitDp ));
+		}
+		if (hasSet(aInfo.dataDir )){
+			appNode.addChild(new TreeNode("dataDir : " + aInfo.dataDir ));
+		}
+		if (hasSet(aInfo.descriptionRes )){
+			appNode.addChild(new TreeNode("descriptionRes : " + aInfo.descriptionRes ));
+		}
+		if (hasSet(aInfo.enabled )){
+			appNode.addChild(new TreeNode("enabled : " + aInfo.enabled ));
+		}
+		if (hasSet(aInfo.flags )){
+			appNode.addChild(new TreeNode("flags : " + aInfo.flags ));
+		}
+		if (hasSet(aInfo.largestWidthLimitDp )){
+			appNode.addChild(new TreeNode("largestWidthLimitDp : " + aInfo.largestWidthLimitDp ));
+		}
+		if (hasSet(aInfo.manageSpaceActivityName )){
+			appNode.addChild(new TreeNode("manageSpaceActivityName : " + aInfo.manageSpaceActivityName ));
+		}
+		if (hasSet(aInfo.nativeLibraryDir )){
+			appNode.addChild(new TreeNode("nativeLibraryDir : " + aInfo.nativeLibraryDir ));
+		}
+		if (hasSet(aInfo.permission )){
+			appNode.addChild(new TreeNode("permission : " + aInfo.permission ));
+		}
+		if (hasSet(aInfo.processName )){
+			appNode.addChild(new TreeNode("processName : " + aInfo.processName ));
+		}
+		if (hasSet(aInfo.publicSourceDir )){
+			appNode.addChild(new TreeNode("publicSourceDir : " + aInfo.publicSourceDir ));
+		}
+		if (hasSet(aInfo.requiresSmallestWidthDp )){
+			appNode.addChild(new TreeNode("requiresSmallestWidthDp : " + aInfo.requiresSmallestWidthDp ));
+		}
+		if (hasSet(aInfo.sharedLibraryFiles )){
+			appNode.addChild(new TreeNode("sharedLibraryFiles : " + aInfo.sharedLibraryFiles ));
+		}
+		if (hasSet(aInfo.sourceDir )){
+			appNode.addChild(new TreeNode("sourceDir : " + aInfo.sourceDir ));
+		}
+//		if (hasSet(aInfo.splitPublicSourceDirs )){
+//			appNode.addChild(new TreeNode("splitPublicSourceDirs : " + aInfo.splitPublicSourceDirs ));
+//		}
+//		if (hasSet(aInfo.splitSourceDirs )){
+//			appNode.addChild(new TreeNode("splitSourceDirs : " + aInfo.splitSourceDirs ));
+//		}
+		if (hasSet(aInfo.targetSdkVersion )){
+			appNode.addChild(new TreeNode("targetSdkVersion : " + aInfo.targetSdkVersion ));
+		}
+		if (hasSet(aInfo.taskAffinity )){
+			appNode.addChild(new TreeNode("taskAffinity : " + aInfo.taskAffinity ));
+		}
+		if (hasSet(aInfo.theme )){
+			appNode.addChild(new TreeNode("theme : " + aInfo.theme ));
+		}
+		if (hasSet(aInfo.uiOptions )){
+			appNode.addChild(new TreeNode("uiOptions : " + aInfo.uiOptions ));
+		}
+		if (hasSet(aInfo.uid )){
+			appNode.addChild(new TreeNode("uid : " + aInfo.uid ));
+		}
+
+		parsePackageItem(appNode, aInfo);
+
+		return appNode;
+	}
+
+	private void parseMetaDataAndAdd(Bundle metaData, TreeNode parent) {
 		if (metaData != null){
 			TreeNode nodes = new TreeNode("meta-datas");
 			Iterator<String> it = metaData.keySet().iterator();
@@ -204,19 +313,139 @@ public class MainActivity extends ActionBarActivity {
 				node.addChildren(new TreeNode("key: " + key), new TreeNode("value: " + value));
 				nodes.addChild(node);
 			}
-			root.addChild(nodes);
+			parent.addChild(nodes);
 		}
 	}
 
-	private TreeNode createActivityNode(PackageInfoX.ActivityInfoX aX) {
-		TreeNode act = new TreeNode(aX.name);
-		TreeNode theme = new TreeNode("theme: " + aX.theme);
-		TreeNode name = new TreeNode("name: " + aX.name);
+	private TreeNode createActivityNode(PackageInfoX.ActivityInfoX item) {
+		TreeNode act = new TreeNode(item.name);
 
-		act.addChild(theme);
-		act.addChild(name);
+		if (hasSet(item.configChanges)){
+			TreeNode node = new TreeNode("configChanges: " + item.configChanges);
+			act.addChild(node);
+		}
+		if (hasSet(item.documentLaunchMode)){
+			TreeNode node = new TreeNode("documentLaunchMode: " + item.documentLaunchMode);
+			act.addChild(node);
+		}
+		if (hasSet(item.flags)){
+			TreeNode node = new TreeNode("flags: " + item.flags);
+			act.addChild(node);
+		}
+		if (hasSet(item.launchMode)){
+			TreeNode node = new TreeNode("launchMode: " + item.launchMode);
+			act.addChild(node);
+		}
+		if (hasSet(item.maxRecents)){
+			TreeNode node = new TreeNode("maxRecents: " + item.maxRecents);
+			act.addChild(node);
+		}
+		if (hasSet(item.parentActivityName)){
+			TreeNode node = new TreeNode("parentActivityName: " + item.parentActivityName);
+			act.addChild(node);
+		}
+		if (hasSet(item.permission)){
+			TreeNode node = new TreeNode("permission: " + item.permission);
+			act.addChild(node);
+		}
+		if (hasSet(item.permission)){
+			TreeNode node = new TreeNode("permission: " + item.permission);
+			act.addChild(node);
+		}
+		if (hasSet(item.persistableMode)){
+			TreeNode node = new TreeNode("persistableMode: " + item.persistableMode);
+			act.addChild(node);
+		}
+		if (hasSet(item.screenOrientation)){
+			TreeNode node = new TreeNode("screenOrientation: " + item.screenOrientation);
+			act.addChild(node);
+		}
+		if (hasSet(item.softInputMode)){
+			TreeNode node = new TreeNode("softInputMode: " + item.softInputMode);
+			act.addChild(node);
+		}
+		if (hasSet(item.targetActivity)){
+			TreeNode node = new TreeNode("targetActivity: " + item.targetActivity);
+			act.addChild(node);
+		}
+		if (hasSet(item.taskAffinity)){
+			TreeNode node = new TreeNode("taskAffinity: " + item.taskAffinity);
+			act.addChild(node);
+		}
+		if (hasSet(item.theme)){
+			TreeNode node = new TreeNode("theme: " + item.theme);
+			act.addChild(node);
+		}
+		if (hasSet(item.uiOptions)){
+			TreeNode node = new TreeNode("uiOptions: " + item.uiOptions);
+			act.addChild(node);
+		}
+
+		parseComponent(act, item);
 
 		return act;
+	}
+
+	private void parseComponent(TreeNode root, ComponentInfo item) {
+		if (hasSet(item.descriptionRes)){
+			TreeNode node = new TreeNode("descriptionRes: " + item.descriptionRes);
+			root.addChild(node);
+		}
+		if (hasSet(item.enabled)){
+			TreeNode node = new TreeNode("enabled: " + item.enabled);
+			root.addChild(node);
+		}
+		if (hasSet(item.exported)){
+			TreeNode node = new TreeNode("exported: " + item.exported);
+			root.addChild(node);
+		}
+		if (hasSet(item.descriptionRes)){
+			TreeNode node = new TreeNode("descriptionRes: " + item.descriptionRes);
+			root.addChild(node);
+		}
+		parsePackageItem(root, item);
+	}
+
+	private void parsePackageItem(TreeNode root, PackageItemInfo item) {
+		if (hasSet(item.banner)) {
+			TreeNode node = new TreeNode("banner: " + item.banner);
+			root.addChild(node);
+		}
+		if (hasSet(item.icon)) {
+			TreeNode node = new TreeNode("icon: " + item.icon);
+			root.addChild(node);
+		}
+		if (hasSet(item.labelRes)) {
+			TreeNode node = new TreeNode("labelRes: " + item.labelRes);
+			root.addChild(node);
+		}
+		if (hasSet(item.logo)) {
+			TreeNode node = new TreeNode("logo: " + item.logo);
+			root.addChild(node);
+		}
+		if (hasSet(item.name)) {
+			TreeNode node = new TreeNode("name: " + item.name);
+			root.addChild(node);
+		}
+		if (hasSet(item.nonLocalizedLabel)) {
+			TreeNode node = new TreeNode("nonLocalizedLabel: " + item.nonLocalizedLabel);
+			root.addChild(node);
+		}
+		if (hasSet(item.packageName)) {
+			TreeNode node = new TreeNode("packageName: " + item.packageName);
+			root.addChild(node);
+		}
+	}
+
+	boolean hasSet(Object o){
+		if (o instanceof Integer){
+			return 0 != o;
+		}
+		if (o instanceof String){
+			return !TextUtils.isEmpty((String)o);
+		}
+
+		return false;
 	}
 
 }

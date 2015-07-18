@@ -64,6 +64,7 @@ public class ApkManifestParser {
 	private static final String ATTR_ICON = "icon";
 	private static final String ATTR_THEME = "theme";
 	private static final String ATTR_LABEL = "label";
+	private static final String ATTR_LABEL_RES = "labelRes";
 	private static final String ATTR_VERSION_NAME = "versionName";
 	private static final String ATTR_VERSION_CODE = "versionCode";
 	private static final String ATTR_NAME = "name";
@@ -74,6 +75,8 @@ public class ApkManifestParser {
 	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
 	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
 	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
+	public static final String ATTR_ENABLED = "enabled";
+	public static final String ATTR_EXPORTED = "exported";
 	
 	// copy from InentFilter
     private static final String SGLOB_STR = "sglob";
@@ -562,7 +565,7 @@ public class ApkManifestParser {
 	}
 
 	/**
-	 * <href a="http://developer.android.com/reference/android/content/pm/ComponentInfo.html">aaa</href>
+	 * <href a="http://developer.android.com/reference/android/content/pm/ComponentInfo.html">ComponentInfo</href>
 	 */
 	private static void parseComponentItem(XmlResourceParser parser,
 			ComponentInfo info) {
@@ -570,12 +573,12 @@ public class ApkManifestParser {
 		for (int i = 0; i < attCount; i++) {
 			String attName = parser.getAttributeName(i);
 			String attValue = parser.getAttributeValue(i);
-			if ("process".equals(attName)) {
+			if (ATTR_PROCESS.equals(attName)) {
 				String cName = attValue;
 				info.processName = cName;
-			} else if ("exported".equals(attName)) {
+			} else if (ATTR_EXPORTED.equals(attName)) {
 				info.exported = Boolean.parseBoolean(attName);
-			} else if ("enabled".equals(attName)) {
+			} else if (ATTR_ENABLED.equals(attName)) {
 				info.enabled = Boolean.parseBoolean(attName);
 			} else if (ATTR_DESCRIPTION.equals(attName)) {
 				info.descriptionRes = toResId(attValue);
@@ -585,13 +588,23 @@ public class ApkManifestParser {
 		parsePackageItem(parser, info);
 	}
 
+	/**
+	 * @see <href a="http://developer.android.com/reference/android/content/pm/PackageItemInfo.html">PackageItemInfo</href>
+	 *
+	 * @param parser
+	 * @param info
+	 */
 	private static void parsePackageItem(XmlResourceParser parser,
 			PackageItemInfo info) {
 		final int attCount = parser.getAttributeCount();
 		for (int i = 0; i < attCount; i++) {
 			String attName = parser.getAttributeName(i);
 			String attValue = parser.getAttributeValue(i);
-			if (ATTR_NAME.equals(attName)) {
+			if (ATTR_BANNER.equals(attName) && afterApiLevel(20)) {
+				info.logo = toResId(attValue);
+			} else if (ATTR_ICON.equals(attName)) {
+				info.icon = toResId(attValue);
+			} else if (ATTR_NAME.equals(attName)) {
 				String cName = attValue;
 				info.name = cName;
 			} else if (ATTR_LABEL.equals(attName)) {
@@ -600,11 +613,7 @@ public class ApkManifestParser {
 				} else {
 					info.nonLocalizedLabel = attValue;
 				}
-			} else if (ATTR_ICON.equals(attName)) {
-				info.icon = toResId(attValue);
-			} else if (ATTR_LOGO.equals(attName) && afterApiLevel(9)) {
-				info.logo = toResId(attValue);
-			} else if (ATTR_BANNER.equals(attName) && afterApiLevel(20)) {
+			}  else if (ATTR_LOGO.equals(attName) && afterApiLevel(9)) {
 				info.logo = toResId(attValue);
 			} else {
 				if (LOG_UN_HANDLED_ITEM) {
