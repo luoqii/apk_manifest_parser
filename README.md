@@ -7,7 +7,7 @@ this is an androd library to parser apk(installed or not installed) on android d
 
 now, it's not completely finished, you can contribute your work.
 
-
+[online demo](https://appetize.io/app/m9feguwfybkzcry2513f8hpx30)
 
 
 <img width='300' hspace='20' align='left' src='https://raw.githubusercontent.com/luoqii/apk_manifest_parser/master/sample/screenshot/anim.gif' />
