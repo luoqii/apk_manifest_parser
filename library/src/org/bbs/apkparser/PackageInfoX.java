@@ -263,6 +263,14 @@ public class PackageInfoX extends PackageInfo {
 	public static class IntentFilterX extends IntentFilter {
 		public Object mCookie;// now it used by apklauncher-sdk 
 		
+		public IntentFilterX(){
+			super();
+		}		
+		
+		public IntentFilterX(IntentFilterX o){
+			super((IntentFilter)o);
+		}
+		
 		public void dump(int level, int flag){
 			if (shouldLog(flag))
 				Log.d(ApkManifestParser.TAG,
