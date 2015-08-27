@@ -20,7 +20,7 @@ import android.util.Log;
  * <pre>
  * all new-added member MUST has a 'm" prefix; 
  * all new-added class  MUST has a 'X' suffix.
- * 
+ * add member if and only if there is no such member in android.xx.
  * @author bysong
  *
  */
@@ -43,7 +43,7 @@ public class PackageInfoX extends PackageInfo {
 	public PermissionTreeX[]     mPermissionTrees;
 
 	// evaluate by application, not parser.
-	public String mLibPath;
+//	public String mLibPath;
 
 	public static boolean hasFlag(int flag, int mask) {
 		return (flag & mask) == mask;
