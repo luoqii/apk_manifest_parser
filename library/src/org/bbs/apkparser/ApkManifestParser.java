@@ -51,32 +51,32 @@ public class ApkManifestParser {
 	private static final String TAG_PERMISSION_TREE  = "permission-tree";
 	private static final String TAG_PERMISSION_GROUP = "permission-group";
 
-	private static final String ATTR_SHARED_USER_LABEL = "sharedUserLabel";
-	private static final String ATTR_SHARED_USER_ID = "sharedUserId";
-	private static final String ATTR_BACKUP_AGENT = "backupAgent";
+	private static final String ATTR_SHARED_USER_LABEL      = "sharedUserLabel";
+	private static final String ATTR_SHARED_USER_ID         = "sharedUserId";
+	private static final String ATTR_BACKUP_AGENT           = "backupAgent";
 	private static final String ATTR_ALLOW_TASK_REPARENTING = "allowTaskReparenting";
-	private static final String ATTR_DEBUGGABLE = "debuggable";
-	private static final String ATTR_PROCESS = "process";
-	private static final String ATTR_BANNER = "banner";
-	private static final String ATTR_LOGO = "logo";
-	private static final String ATTR_RESOURCE = "resource";
-	private static final String ATTR_VALUE = "value";
-	private static final String ATTR_ICON = "icon";
-	private static final String ATTR_THEME = "theme";
-	private static final String ATTR_LABEL = "label";
-	private static final String ATTR_LABEL_RES = "labelRes";
-	private static final String ATTR_VERSION_NAME = "versionName";
-	private static final String ATTR_VERSION_CODE = "versionCode";
-	private static final String ATTR_NAME = "name";
-	private static final String ATTR_PACKAGE = "package";
-	private static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
-	private static final String ATTR_PERMISSION_GROUP = "permissionGroup";
-	private static final String ATTR_DESCRIPTION = "description";
-	private static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion";
-	private static final String ATTR_MAX_SDK_VERSION = "maxSdkVersion";
-	private static final String ATTR_MIN_SDK_VERSION = "minSdkVersion";
-	public static final String ATTR_ENABLED = "enabled";
-	public static final String ATTR_EXPORTED = "exported";
+	private static final String ATTR_DEBUGGABLE             = "debuggable";
+	private static final String ATTR_PROCESS                = "process";
+	private static final String ATTR_BANNER                 = "banner";
+	private static final String ATTR_LOGO                   = "logo";
+	private static final String ATTR_RESOURCE               = "resource";
+	private static final String ATTR_VALUE                  = "value";
+	private static final String ATTR_ICON                   = "icon";
+	private static final String ATTR_THEME                  = "theme";
+	private static final String ATTR_LABEL                  = "label";
+	private static final String ATTR_LABEL_RES              = "labelRes";
+	private static final String ATTR_VERSION_NAME           = "versionName";
+	private static final String ATTR_VERSION_CODE           = "versionCode";
+	private static final String ATTR_NAME                   = "name";
+	private static final String ATTR_PACKAGE                = "package";
+	private static final String ATTR_PROTECTION_LEVEL       = "protectionLevel";
+	private static final String ATTR_PERMISSION_GROUP       = "permissionGroup";
+	private static final String ATTR_DESCRIPTION            = "description";
+	private static final String ATTR_TARGET_SDK_VERSION     = "targetSdkVersion";
+	private static final String ATTR_MAX_SDK_VERSION        = "maxSdkVersion";
+	private static final String ATTR_MIN_SDK_VERSION        = "minSdkVersion";
+	public static final String ATTR_ENABLED                 = "enabled";
+	public static final String ATTR_EXPORTED                = "exported";
 	
 	// copy from InentFilter
     private static final String SGLOB_STR = "sglob";
@@ -545,9 +545,9 @@ public class ApkManifestParser {
 			if (TAG_ACTIVITY.equals(tagName)) {
 				parseActivity(parser, info);
 			} else if (TAG_META_DATA.equals(tagName)) {
-				if (info.applicationInfo == null) {
-					info.applicationInfo = new ApplicationInfoX();
-				}
+//				if (info.applicationInfo == null) {
+//					info.applicationInfo = new ApplicationInfoX();
+//				}
 				if (info.applicationInfo.metaData == null) {
 					info.applicationInfo.metaData = new Bundle();
 				}

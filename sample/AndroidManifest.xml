@@ -14,6 +14,10 @@
     <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <permission android:name="org.bbs.apkparser.TEST_PERMISSION"/>
+    <android:uses-permission android:name="org.bbs.apkparser.TEST_PERMISSION" />
+    <android:uses-permission android:name="org.bbs.apkparser.NON_EXIST_PERMISSION" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
