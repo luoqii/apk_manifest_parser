@@ -12,6 +12,10 @@ dependencies {
 
     // https://github.com/bmelnychuk/AndroidTreeView
     compile 'com.github.bmelnychuk:atv:1.2.+'
+
+    //http://tools.android.com/tech-docs/unit-testing-support
+    testCompile 'junit:junit:4.12'
+    testCompile "org.mockito:mockito-core:1.9.5"
 }
 
 android {
@@ -36,6 +40,9 @@ android {
 
         // Move the tests to tests/java, tests/res, etc...
         instrumentTest.setRoot('tests')
+
+        test.setRoot('test/androidunit')
+        test.java.srcDirs("test/androidunit/")
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
