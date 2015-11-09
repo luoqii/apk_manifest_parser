@@ -151,12 +151,12 @@ public class MainActivity extends ActionBarActivity {
 			manifestNode.addChild(appNode);
 
 			if (info.activities != null && info.activities.length > 0){
-				TreeNode actRoot = new TreeNode("activities");
+				TreeNode actRoot = new TreeNode("activities [" + info.activities.length + "]");
 				for (ActivityInfo a : info.activities){
 					PackageInfoX.ActivityInfoX aX = (PackageInfoX.ActivityInfoX) a;
 					TreeNode act = createActivityNode(aX);
 					if (aX.mIntentFilters != null && aX.mIntentFilters.length > 0){
-						TreeNode filtersN = new TreeNode("mIntentFilters");
+						TreeNode filtersN = new TreeNode("mIntentFilters [" + aX.mIntentFilters.length + "]");
 						for (PackageInfoX.IntentFilterX f: aX.mIntentFilters){
 							TreeNode filter = new TreeNode("intentfilter");
 							int count = f.countActions();
@@ -305,7 +305,7 @@ public class MainActivity extends ActionBarActivity {
 
 		private static void parseMetaDataAndAdd(Bundle metaData, TreeNode parent) {
 			if (metaData != null){
-				TreeNode nodes = new TreeNode("meta-datas");
+				TreeNode nodes = new TreeNode("meta-datas [" + metaData.keySet().size() + "]");
 				Iterator<String> it = metaData.keySet().iterator();
 				while (it.hasNext()) {
 					String key = it.next();
