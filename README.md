@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/luoqii/apk_manifest_parser.svg)](https://travis-ci.org/luoqii/apk_manifest_parser)
-
+[![Build Status](https://circleci.com/gh/luoqii/apk_manifest_parser.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/luoqii/apk_manifest_parser)
 # apk_manifest_parser
 parse android apk's manifest file on android-powered devices.
 
